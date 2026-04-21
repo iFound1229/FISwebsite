@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frog in Space</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <nav class="tabs">
+    <a href="#home" class="tab active">Home</a>
+    <a href="#bio" class="tab">Bio</a>
+    <a href="#shows" class="tab">Shows</a>
+    <a href="#store" class="tab">Store</a>
+    <a href="#songlist" class="tab">Song List</a>
+    <a href="#contact" class="tab">Contact</a>
+  </nav>
+
+  <header class="title-section" id="home">
+    <div class="logo-wrapper">
+      {% if data.logo %}
+        <img src="{{ url_for('static', filename=data.logo) }}" alt="Logo" class="logo" />
+      {% else %}
+        <div class="logo-placeholder">Insert Logo Here</div>
+      {% endif %}
+    </div>
+  </header>
+
+  <section class="socials-section">
+    <h2>Follow Me</h2>
+    <div class="social-links">
+      <a href="{{ data.instagram or '#' }}" target="_blank" rel="noopener" class="social-link">
+        <span class="social-icon">📷</span>
+        <span>Instagram</span>
+      </a>
+      <a href="{{ data.youtube or '#' }}" target="_blank" rel="noopener" class="social-link">
+        <span class="social-icon">▶️</span>
+        <span>YouTube</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="picture-section">
+    <div class="picture-wrapper">
+      {% if data.feature %}
+        <img src="{{ url_for('static', filename=data.feature) }}" alt="Feature" class="feature-image" />
+      {% else %}
+        <div class="picture-placeholder">Insert Picture Here</div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="events-section" id="shows">
+    <h2>Upcoming Events</h2>
+    {% if data.events %}
+      <ul class="events-list">
+        {% for e in data.events %}
+          <li class="event-item">
+            <div class="event-date">{{ e.date or 'TBD' }}</div>
+            <div class="event-details">
+              <div class="event-name">{{ e.name }}</div>
+              <div class="event-location">{{ e.location }}</div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p style="text-align:center;">No upcoming events yet.</p>
+    {% endif %}
+  </section>
+
+  {% if data.songs %}
+  <section class="songs-section" id="songlist">
+    <h2>Song List</h2>
+    <ul class="songs-list">
+      {% for s in data.songs %}
+        <li class="song-item">
+          <span class="song-title">{{ s.title }}</span>
+          {% if s.artist %}<span class="song-artist">— {{ s.artist }}</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <section class="gallery-section">
+    <h2>Photo Gallery</h2>
+    <div class="slideshow">
+      <div class="slides">
+        {% if data.gallery %}
+          {% for g in data.gallery %}
+            <div class="slide {% if loop.first %}active{% endif %}">
+              <img src="{{ url_for('static', filename=g) }}" alt="Gallery photo" />
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="slide active">
+            <div class="slide-placeholder">No photos yet</div>
+          </div>
+        {% endif %}
+      </div>
+      {% if data.gallery and data.gallery|length > 1 %}
+        <button class="slide-btn prev" aria-label="Previous">&#10094;</button>
+        <button class="slide-btn next" aria-label="Next">&#10095;</button>
+        <div class="dots">
+          {% for g in data.gallery %}
+            <span class="dot {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}"></span>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

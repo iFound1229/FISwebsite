@@ -166,6 +166,34 @@ section h2 {
   margin-top: 2px;
 }
 
+.songs-list {
+  list-style: none;
+  max-width: 700px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 24px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.song-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #eef2f7;
+  font-size: 16px;
+}
+
+.song-item:last-child { border-bottom: none; }
+
+.song-title { font-weight: 600; }
+
+.song-artist { color: #555; margin-left: 6px; }
+
+.slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .slideshow {
   position: relative;
   max-width: 800px;
@@ -193,12 +221,6 @@ section h2 {
 
 .slide.active {
   opacity: 1;
-}
-
-.slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .slide-placeholder {

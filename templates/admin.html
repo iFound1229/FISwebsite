@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Frog in Space</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <style>
+    body { background: #f4f7fb; color: #1a3a5c; }
+    .admin-wrap { max-width: 900px; margin: 0 auto; padding: 30px 20px 80px; }
+    .admin-wrap h1 { margin-bottom: 8px; }
+    .admin-wrap p.subtitle { color: #555; margin-bottom: 24px; }
+    .card { background: #fff; border-radius: 12px; padding: 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .card h2 { margin: 0 0 14px; font-size: 20px; text-align: left; }
+    label { display: block; font-weight: 600; margin: 10px 0 6px; }
+    input[type="text"], input[type="url"], input[type="file"] {
+      width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px;
+    }
+    .row { display: grid; grid-template-columns: 1fr 2fr 2fr auto; gap: 10px; align-items: end; margin-bottom: 10px; }
+    .row.songs { grid-template-columns: 2fr 2fr auto; }
+    .row .remove { background: #fee2e2; color: #b91c1c; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .add-btn { background: rgba(117, 198, 255, 1); color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 8px; }
+    .save-bar { position: sticky; bottom: 0; background: #fff; padding: 14px; border-radius: 12px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
+    .save-btn { background: #16a34a; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    .preview-img { max-height: 100px; border-radius: 6px; margin-top: 8px; display: block; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+    .gallery-item { position: relative; }
+    .gallery-item img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
+    .gallery-item label { display: flex; align-items: center; gap: 6px; font-weight: 500; margin-top: 4px; font-size: 14px; }
+    .flash { background: #dcfce7; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+<div class="admin-wrap">
+  <h1>Admin Panel</h1>
+  <p class="subtitle">Update your site content. Click <strong>Save Changes</strong> when done.</p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST" action="{{ url_for('admin_save', key=key) }}" enctype="multipart/form-data">
+
+    <div class="card">
+      <h2>Logo</h2>
+      {% if data.logo %}<img class="preview-img" src="{{ url_for('static', filename=data.logo) }}" />{% endif %}
+      <label>Replace logo (PNG/JPG)</label>
+      <input type="file" name="logo" accept="image/*" />
+    </div>
+
+    <div class="card">
+      <h2>Feature Picture</h2>
+      {% if data.feature %}<img class="preview-img" src="{{ url_for('static', filename=data.feature) }}" />{% endif %}
+      <label>Replace feature picture</label>
+      <input type="file" name="feature" accept="image/*" />
+    </div>
+
+    <div class="card">
+      <h2>Social Links</h2>
+      <label>Instagram URL</label>
+      <input type="url" name="instagram" value="{{ data.instagram }}" placeholder="https://instagram.com/..." />
+      <label>YouTube URL</label>
+      <input type="url" name="youtube" value="{{ data.youtube }}" placeholder="https://youtube.com/..." />
+    </div>
+
+    <div class="card">
+      <h2>Upcoming Events</h2>
+      <div id="events-container">
+        {% for e in data.events %}
+        <div class="row">
+          <div><label>Date</label><input type="text" name="event_date" value="{{ e.date }}" placeholder="Jan 1, 2026" /></div>
+          <div><label>Event Name</label><input type="text" name="event_name" value="{{ e.name }}" /></div>
+          <div><label>Location</label><input type="text" name="event_location" value="{{ e.location }}" /></div>
+          <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="add-btn" onclick="addEvent()">+ Add Event</button>
+    </div>
+
+    <div class="card">
+      <h2>Song List</h2>
+      <div id="songs-container">
+        {% for s in data.songs %}
+        <div class="row songs">
+          <div><label>Song Title</label><input type="text" name="song_title" value="{{ s.title }}" /></div>
+          <div><label>Artist</label><input type="text" name="song_artist" value="{{ s.artist }}" /></div>
+          <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="add-btn" onclick="addSong()">+ Add Song</button>
+    </div>
+
+    <div class="card">
+      <h2>Photo Gallery (Slideshow)</h2>
+      {% if data.gallery %}
+      <div class="gallery-grid">
+        {% for g in data.gallery %}
+          <div class="gallery-item">
+            <img src="{{ url_for('static', filename=g) }}" />
+            <label><input type="checkbox" name="gallery_keep" value="{{ g }}" checked /> Keep</label>
+          </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p>No photos in the gallery yet.</p>
+      {% endif %}
+      <label style="margin-top:16px;">Add new photos (you can select multiple)</label>
+      <input type="file" name="gallery_new" accept="image/*" multiple />
+    </div>
+
+    <div class="save-bar">
+      <a href="/" target="_blank">View live site →</a>
+      <button type="submit" class="save-btn">Save Changes</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function addEvent() {
+  const c = document.getElementById('events-container');
+  const div = document.createElement('div');
+  div.className = 'row';
+  div.innerHTML = `
+    <div><label>Date</label><input type="text" name="event_date" placeholder="Jan 1, 2026" /></div>
+    <div><label>Event Name</label><input type="text" name="event_name" /></div>
+    <div><label>Location</label><input type="text" name="event_location" /></div>
+    <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>`;
+  c.appendChild(div);
+}
+function addSong() {
+  const c = document.getElementById('songs-container');
+  const div = document.createElement('div');
+  div.className = 'row songs';
+  div.innerHTML = `
+    <div><label>Song Title</label><input type="text" name="song_title" /></div>
+    <div><label>Artist</label><input type="text" name="song_artist" /></div>
+    <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>`;
+  c.appendChild(div);
+}
+</script>
+</body>
+</html>
