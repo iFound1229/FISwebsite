@@ -3,11 +3,33 @@
 {% block content %}
 <section class="page-section">
   <h1 class="page-title">Shows</h1>
-  {% with events_title='Upcoming Events', events_list=data.events, empty_text='No upcoming events yet.' %}
-    {% include "_events.html" %}
-  {% endwith %}
-  {% with events_title='Past Events', events_list=data.past_events, empty_text='No past events to show.' %}
-    {% include "_events.html" %}
-  {% endwith %}
+
+  <div class="shows-toggle">
+    <button type="button" class="toggle-btn active" data-target="upcoming-pane">Upcoming</button>
+    <button type="button" class="toggle-btn" data-target="past-pane">Past</button>
+  </div>
+
+  <div id="upcoming-pane" class="shows-pane active">
+    {% with events_title='Upcoming Events', events_list=data.events, empty_text='No upcoming events yet.' %}
+      {% include "_events.html" %}
+    {% endwith %}
+  </div>
+
+  <div id="past-pane" class="shows-pane">
+    {% with events_title='Past Events', events_list=data.past_events, empty_text='No past events to show.' %}
+      {% include "_events.html" %}
+    {% endwith %}
+  </div>
 </section>
+
+<script>
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.shows-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.target).classList.add('active');
+    });
+  });
+</script>
 {% endblock %}

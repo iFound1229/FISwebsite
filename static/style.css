@@ -138,6 +138,40 @@ section h2 {
   margin: 0 auto;
 }
 
+.shows-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.toggle-btn {
+  background: transparent;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a3a5c;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.toggle-btn.active {
+  background: rgba(117, 198, 255, 1);
+  color: #fff;
+}
+
+.shows-pane { display: none; }
+.shows-pane.active { display: block; }
+
 .event-item {
   display: flex;
   align-items: center;
