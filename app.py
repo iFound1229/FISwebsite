@@ -1,12 +1,16 @@
 import json
+import mimetypes
+import os
 import uuid
 from pathlib import Path
-from flask import Flask, render_template, request, redirect, url_for, abort, flash
+
+import psycopg2
+import psycopg2.extras
+from flask import (
+    Flask, render_template, request, redirect, url_for, abort, flash, Response
+)
 
 BASE_DIR = Path(__file__).parent
-DATA_FILE = BASE_DIR / "data.json"
-UPLOAD_DIR = BASE_DIR / "static" / "uploads"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 ADMIN_KEY = "lilyrose"
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
@@ -32,14 +36,49 @@ FIS is beyond excited for its future. We recently played at our Junior Prom whic
 Thanks for your interest in Frog in Space!"""
 
 app = Flask(__name__)
-app.secret_key = "frog-in-space-secret"
+app.secret_key = os.environ.get("FLASK_SECRET", "frog-in-space-secret")
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
+
+
+# ---------- DB helpers ----------
+
+def get_conn():
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL is not set")
+    return psycopg2.connect(url)
+
+
+def init_db():
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS site_data (
+              id INTEGER PRIMARY KEY DEFAULT 1,
+              data JSONB NOT NULL,
+              CONSTRAINT singleton CHECK (id = 1)
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS media (
+              id TEXT PRIMARY KEY,
+              mime TEXT NOT NULL,
+              bytes BYTEA NOT NULL,
+              created_at TIMESTAMP DEFAULT NOW()
+            );
+        """)
+        cur.execute("SELECT 1 FROM site_data WHERE id = 1")
+        if not cur.fetchone():
+            cur.execute(
+                "INSERT INTO site_data (id, data) VALUES (1, %s)",
+                (json.dumps(default_data()),),
+            )
+        conn.commit()
 
 
 def default_data():
     return {
-        "logo": "uploads/logo.png",
-        "feature": "uploads/feature.jpg",
+        "logo": None,
+        "feature": None,
         "instagram": "https://www.instagram.com/froginspaceband/",
         "youtube": "",
         "contact_email": "colton.gernon@gmail.com",
@@ -51,19 +90,25 @@ def default_data():
 
 
 def load_data():
-    if not DATA_FILE.exists():
-        save_data(default_data())
-    with open(DATA_FILE) as f:
-        data = json.load(f)
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("SELECT data FROM site_data WHERE id = 1")
+        row = cur.fetchone()
     base = default_data()
-    base.update(data)
+    if row:
+        base.update(row[0] or {})
     return base
 
 
 def save_data(data):
-    with open(DATA_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            "UPDATE site_data SET data = %s WHERE id = 1",
+            (json.dumps(data),),
+        )
+        conn.commit()
 
+
+# ---------- Media (images) stored in Postgres ----------
 
 def allowed_file(name):
     return "." in name and name.rsplit(".", 1)[1].lower() in ALLOWED_EXT
@@ -75,11 +120,78 @@ def save_upload(file_storage):
     if not allowed_file(file_storage.filename):
         return None
     ext = file_storage.filename.rsplit(".", 1)[1].lower()
-    name = f"{uuid.uuid4().hex}.{ext}"
-    path = UPLOAD_DIR / name
-    file_storage.save(path)
-    return f"uploads/{name}"
+    media_id = f"{uuid.uuid4().hex}.{ext}"
+    mime = file_storage.mimetype or mimetypes.guess_type(file_storage.filename)[0] or "application/octet-stream"
+    blob = file_storage.read()
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            "INSERT INTO media (id, mime, bytes) VALUES (%s, %s, %s)",
+            (media_id, mime, psycopg2.Binary(blob)),
+        )
+        conn.commit()
+    return f"media/{media_id}"
 
+
+def import_seed_files():
+    """One-time: copy any local seed images into the DB if data has no logo/feature."""
+    data = load_data()
+    seed_dir = BASE_DIR / "static" / "uploads"
+    changed = False
+
+    def import_local(path: Path):
+        ext = path.suffix.lstrip(".").lower()
+        media_id = f"{uuid.uuid4().hex}.{ext}"
+        mime = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
+        with open(path, "rb") as f:
+            blob = f.read()
+        with get_conn() as conn, conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO media (id, mime, bytes) VALUES (%s, %s, %s)",
+                (media_id, mime, psycopg2.Binary(blob)),
+            )
+            conn.commit()
+        return f"media/{media_id}"
+
+    if not data.get("logo"):
+        p = seed_dir / "logo.png"
+        if p.exists():
+            data["logo"] = import_local(p)
+            changed = True
+    if not data.get("feature"):
+        p = seed_dir / "feature.jpg"
+        if p.exists():
+            data["feature"] = import_local(p)
+            changed = True
+    if changed:
+        save_data(data)
+
+
+@app.route("/media/<media_id>")
+def serve_media(media_id):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("SELECT mime, bytes FROM media WHERE id = %s", (media_id,))
+        row = cur.fetchone()
+    if not row:
+        abort(404)
+    mime, blob = row
+    return Response(bytes(blob), mimetype=mime, headers={"Cache-Control": "public, max-age=3600"})
+
+
+# ---------- Template helper: build URLs for stored assets ----------
+
+@app.context_processor
+def inject_helpers():
+    def asset_url(path):
+        if not path:
+            return ""
+        if path.startswith("media/"):
+            return url_for("serve_media", media_id=path.split("/", 1)[1])
+        # legacy fallback for any leftover static path
+        return url_for("static", filename=path)
+    return {"asset_url": asset_url}
+
+
+# ---------- Pages ----------
 
 @app.route("/")
 def home():
@@ -110,6 +222,8 @@ def songlist():
 def contact():
     return render_template("contact.html", data=load_data(), active="contact")
 
+
+# ---------- Admin ----------
 
 @app.route("/<key>", methods=["GET"])
 def admin(key):
@@ -165,5 +279,12 @@ def admin_save(key):
     return redirect(url_for("admin", key=key))
 
 
+# ---------- Startup ----------
+
+init_db()
+import_seed_files()
+
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)

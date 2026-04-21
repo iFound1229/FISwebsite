@@ -45,14 +45,14 @@
 
     <div class="card">
       <h2>Logo</h2>
-      {% if data.logo %}<img class="preview-img" src="{{ url_for('static', filename=data.logo) }}" />{% endif %}
+      {% if data.logo %}<img class="preview-img" src="{{ asset_url(data.logo) }}" />{% endif %}
       <label>Replace logo (PNG/JPG)</label>
       <input type="file" name="logo" accept="image/*" />
     </div>
 
     <div class="card">
       <h2>Feature Picture</h2>
-      {% if data.feature %}<img class="preview-img" src="{{ url_for('static', filename=data.feature) }}" />{% endif %}
+      {% if data.feature %}<img class="preview-img" src="{{ asset_url(data.feature) }}" />{% endif %}
       <label>Replace feature picture</label>
       <input type="file" name="feature" accept="image/*" />
     </div>
@@ -112,7 +112,7 @@
       <div class="gallery-grid">
         {% for g in data.gallery %}
           <div class="gallery-item">
-            <img src="{{ url_for('static', filename=g) }}" />
+            <img src="{{ asset_url(g) }}" />
             <label><input type="checkbox" name="gallery_keep" value="{{ g }}" checked /> Keep</label>
           </div>
         {% endfor %}

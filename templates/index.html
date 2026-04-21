@@ -3,7 +3,7 @@
   <header class="title-section">
     <div class="logo-wrapper">
       {% if data.logo %}
-        <img src="{{ url_for('static', filename=data.logo) }}" alt="Logo" class="logo" />
+        <img src="{{ asset_url(data.logo) }}" alt="Logo" class="logo" />
       {% else %}
         <div class="logo-placeholder">Insert Logo Here</div>
       {% endif %}
@@ -29,7 +29,7 @@
   <section class="picture-section">
     <div class="picture-wrapper">
       {% if data.feature %}
-        <img src="{{ url_for('static', filename=data.feature) }}" alt="Feature" class="feature-image" />
+        <img src="{{ asset_url(data.feature) }}" alt="Feature" class="feature-image" />
       {% else %}
         <div class="picture-placeholder">Insert Picture Here</div>
       {% endif %}
@@ -45,7 +45,7 @@
         {% if data.gallery %}
           {% for g in data.gallery %}
             <div class="slide {% if loop.first %}active{% endif %}">
-              <img src="{{ url_for('static', filename=g) }}" alt="Gallery photo" />
+              <img src="{{ asset_url(g) }}" alt="Gallery photo" />
             </div>
           {% endfor %}
         {% else %}
