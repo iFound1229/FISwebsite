@@ -3,6 +3,11 @@
 {% block content %}
 <section class="page-section">
   <h1 class="page-title">Shows</h1>
-  {% include "_events.html" %}
+  {% with events_title='Upcoming Events', events_list=data.events, empty_text='No upcoming events yet.' %}
+    {% include "_events.html" %}
+  {% endwith %}
+  {% with events_title='Past Events', events_list=data.past_events, empty_text='No past events to show.' %}
+    {% include "_events.html" %}
+  {% endwith %}
 </section>
 {% endblock %}

@@ -16,8 +16,9 @@
     input[type="text"], input[type="url"], input[type="file"] {
       width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 15px;
     }
-    .row { display: grid; grid-template-columns: 1fr 2fr 2fr auto; gap: 10px; align-items: end; margin-bottom: 10px; }
+    .row { display: grid; grid-template-columns: 1fr 2fr 2fr 1.2fr auto; gap: 10px; align-items: end; margin-bottom: 14px; }
     .row.songs { grid-template-columns: 2fr 2fr auto; }
+    .row .thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 4px; margin-bottom: 4px; display: block; }
     .row .remove { background: #fee2e2; color: #b91c1c; border: none; padding: 10px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     .add-btn { background: rgba(117, 198, 255, 1); color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 8px; }
     .save-bar { position: sticky; bottom: 0; background: #fff; padding: 14px; border-radius: 12px; box-shadow: 0 -4px 12px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center; }
@@ -85,11 +86,38 @@
           <div><label>Date</label><input type="text" name="event_date" value="{{ e.date }}" placeholder="Jan 1, 2026" /></div>
           <div><label>Event Name</label><input type="text" name="event_name" value="{{ e.name }}" /></div>
           <div><label>Location</label><input type="text" name="event_location" value="{{ e.location }}" /></div>
+          <div>
+            <label>Image</label>
+            {% if e.image %}<img class="thumb" src="{{ asset_url(e.image) }}" />{% endif %}
+            <input type="hidden" name="event_image_existing" value="{{ e.image or '' }}" />
+            <input type="file" name="event_image_new" accept="image/*" />
+          </div>
           <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
         </div>
         {% endfor %}
       </div>
-      <button type="button" class="add-btn" onclick="addEvent()">+ Add Event</button>
+      <button type="button" class="add-btn" onclick="addEvent('events-container','event')">+ Add Event</button>
+    </div>
+
+    <div class="card">
+      <h2>Past Events</h2>
+      <div id="past-events-container">
+        {% for e in data.past_events %}
+        <div class="row">
+          <div><label>Date</label><input type="text" name="past_event_date" value="{{ e.date }}" placeholder="Jan 1, 2025" /></div>
+          <div><label>Event Name</label><input type="text" name="past_event_name" value="{{ e.name }}" /></div>
+          <div><label>Location</label><input type="text" name="past_event_location" value="{{ e.location }}" /></div>
+          <div>
+            <label>Image</label>
+            {% if e.image %}<img class="thumb" src="{{ asset_url(e.image) }}" />{% endif %}
+            <input type="hidden" name="past_event_image_existing" value="{{ e.image or '' }}" />
+            <input type="file" name="past_event_image_new" accept="image/*" />
+          </div>
+          <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="add-btn" onclick="addEvent('past-events-container','past_event')">+ Add Past Event</button>
     </div>
 
     <div class="card">
@@ -132,14 +160,19 @@
 </div>
 
 <script>
-function addEvent() {
-  const c = document.getElementById('events-container');
+function addEvent(containerId, prefix) {
+  const c = document.getElementById(containerId);
   const div = document.createElement('div');
   div.className = 'row';
   div.innerHTML = `
-    <div><label>Date</label><input type="text" name="event_date" placeholder="Jan 1, 2026" /></div>
-    <div><label>Event Name</label><input type="text" name="event_name" /></div>
-    <div><label>Location</label><input type="text" name="event_location" /></div>
+    <div><label>Date</label><input type="text" name="${prefix}_date" placeholder="Jan 1, 2026" /></div>
+    <div><label>Event Name</label><input type="text" name="${prefix}_name" /></div>
+    <div><label>Location</label><input type="text" name="${prefix}_location" /></div>
+    <div>
+      <label>Image</label>
+      <input type="hidden" name="${prefix}_image_existing" value="" />
+      <input type="file" name="${prefix}_image_new" accept="image/*" />
+    </div>
     <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>`;
   c.appendChild(div);
 }

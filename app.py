@@ -84,6 +84,7 @@ def default_data():
         "contact_email": "colton.gernon@gmail.com",
         "bio": DEFAULT_BIO,
         "events": [],
+        "past_events": [],
         "songs": [],
         "gallery": [],
     }
@@ -250,14 +251,31 @@ def admin_save(key):
     if feature:
         data["feature"] = feature
 
-    event_dates = request.form.getlist("event_date")
-    event_names = request.form.getlist("event_name")
-    event_locations = request.form.getlist("event_location")
-    events = []
-    for d, n, l in zip(event_dates, event_names, event_locations):
-        if d.strip() or n.strip() or l.strip():
-            events.append({"date": d.strip(), "name": n.strip(), "location": l.strip()})
-    data["events"] = events
+    def collect_events(prefix):
+        dates = request.form.getlist(f"{prefix}_date")
+        names = request.form.getlist(f"{prefix}_name")
+        locations = request.form.getlist(f"{prefix}_location")
+        existing_images = request.form.getlist(f"{prefix}_image_existing")
+        new_files = request.files.getlist(f"{prefix}_image_new")
+        out = []
+        for i, (d, n, l) in enumerate(zip(dates, names, locations)):
+            if not (d.strip() or n.strip() or l.strip()):
+                continue
+            img = existing_images[i] if i < len(existing_images) else ""
+            if i < len(new_files):
+                uploaded = save_upload(new_files[i])
+                if uploaded:
+                    img = uploaded
+            out.append({
+                "date": d.strip(),
+                "name": n.strip(),
+                "location": l.strip(),
+                "image": img,
+            })
+        return out
+
+    data["events"] = collect_events("event")
+    data["past_events"] = collect_events("past_event")
 
     song_titles = request.form.getlist("song_title")
     song_artists = request.form.getlist("song_artist")

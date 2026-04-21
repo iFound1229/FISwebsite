@@ -1,9 +1,13 @@
 <section class="events-section">
-  <h2>Upcoming Events</h2>
-  {% if data.events %}
+  <h2>{{ events_title or 'Upcoming Events' }}</h2>
+  {% set evts = events_list if events_list is defined else data.events %}
+  {% if evts %}
     <ul class="events-list">
-      {% for e in data.events %}
+      {% for e in evts %}
         <li class="event-item">
+          {% if e.image %}
+            <img src="{{ asset_url(e.image) }}" alt="" class="event-image" />
+          {% endif %}
           <div class="event-date">{{ e.date or 'TBD' }}</div>
           <div class="event-details">
             <div class="event-name">{{ e.name }}</div>
@@ -13,6 +17,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p style="text-align:center;">No upcoming events yet.</p>
+    <p style="text-align:center;">{{ empty_text or 'No upcoming events yet.' }}</p>
   {% endif %}
 </section>
