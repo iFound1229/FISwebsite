@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Contact — Frog in Space{% endblock %}
+{% block content %}
+<section class="page-section">
+  <h1 class="page-title">Contact</h1>
+  <p style="text-align:center;">Want to book us, ask a question, or say hi? Send us an email!</p>
+  <div style="text-align:center; margin-top:30px;">
+    <a href="mailto:{{ data.contact_email }}?subject=Frog%20in%20Space%20Inquiry" class="contact-btn">
+      📧 Email {{ data.contact_email }}
+    </a>
+  </div>
+  <div class="social-links" style="margin-top:30px;">
+    {% if data.instagram %}<a href="{{ data.instagram }}" target="_blank" rel="noopener" class="social-link"><span class="social-icon">📷</span><span>Instagram</span></a>{% endif %}
+    {% if data.youtube %}<a href="{{ data.youtube }}" target="_blank" rel="noopener" class="social-link"><span class="social-icon">▶️</span><span>YouTube</span></a>{% endif %}
+  </div>
+</section>
+{% endblock %}

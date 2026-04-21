@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Frog in Space{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <nav class="tabs">
+    <a href="{{ url_for('home') }}" class="tab {% if active=='home' %}active{% endif %}">Home</a>
+    <a href="{{ url_for('bio') }}" class="tab {% if active=='bio' %}active{% endif %}">Bio</a>
+    <a href="{{ url_for('shows') }}" class="tab {% if active=='shows' %}active{% endif %}">Shows</a>
+    <a href="{{ url_for('store') }}" class="tab {% if active=='store' %}active{% endif %}">Store</a>
+    <a href="{{ url_for('songlist') }}" class="tab {% if active=='songlist' %}active{% endif %}">Song List</a>
+    <a href="{{ url_for('contact') }}" class="tab {% if active=='contact' %}active{% endif %}">Contact</a>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

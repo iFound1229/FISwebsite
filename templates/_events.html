@@ -1,0 +1,18 @@
+<section class="events-section">
+  <h2>Upcoming Events</h2>
+  {% if data.events %}
+    <ul class="events-list">
+      {% for e in data.events %}
+        <li class="event-item">
+          <div class="event-date">{{ e.date or 'TBD' }}</div>
+          <div class="event-details">
+            <div class="event-name">{{ e.name }}</div>
+            <div class="event-location">{{ e.location }}</div>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p style="text-align:center;">No upcoming events yet.</p>
+  {% endif %}
+</section>

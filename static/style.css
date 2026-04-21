@@ -166,6 +166,56 @@ section h2 {
   margin-top: 2px;
 }
 
+.page-section {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 36px;
+  margin-bottom: 30px;
+  color: #1a3a5c;
+}
+
+.bio-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+.bio-content h3 {
+  margin: 22px 0 10px;
+  font-size: 20px;
+  color: rgba(117, 198, 255, 1);
+}
+
+.bio-content h3:first-child { margin-top: 0; }
+
+.bio-content p {
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+
+.contact-btn {
+  display: inline-block;
+  background: rgba(117, 198, 255, 1);
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.2s;
+}
+
+.contact-btn:hover { transform: translateY(-2px); }
+
 .songs-list {
   list-style: none;
   max-width: 700px;

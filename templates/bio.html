@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Bio — Frog in Space{% endblock %}
+{% block content %}
+<section class="page-section">
+  <h1 class="page-title">Bio</h1>
+  <div class="bio-content">
+    {% for para in data.bio.split('\n\n') %}
+      {% set p = para.strip() %}
+      {% if p %}
+        {% if p == p.upper() and p|length < 80 %}
+          <h3>{{ p }}</h3>
+        {% elif p.endswith('?') and p|length < 80 %}
+          <h3>{{ p }}</h3>
+        {% elif p == 'Introduction' or p == 'Our Story' %}
+          <h3>{{ p }}</h3>
+        {% else %}
+          <p>{{ p|safe }}</p>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div class="social-links" style="margin-top:30px;">
+    {% if data.instagram %}<a href="{{ data.instagram }}" target="_blank" rel="noopener" class="social-link"><span class="social-icon">📷</span><span>Instagram</span></a>{% endif %}
+    {% if data.youtube %}<a href="{{ data.youtube }}" target="_blank" rel="noopener" class="social-link"><span class="social-icon">▶️</span><span>YouTube</span></a>{% endif %}
+  </div>
+</section>
+{% endblock %}

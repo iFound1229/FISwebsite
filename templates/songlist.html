@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Song List — Frog in Space{% endblock %}
+{% block content %}
+<section class="page-section">
+  <h1 class="page-title">Song List</h1>
+  {% if data.songs %}
+    <ul class="songs-list">
+      {% for s in data.songs %}
+        <li class="song-item">
+          <span class="song-title">{{ s.title }}</span>
+          {% if s.artist %}<span class="song-artist">— {{ s.artist }}</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p style="text-align:center;">Song list coming soon.</p>
+  {% endif %}
+</section>
+{% endblock %}
