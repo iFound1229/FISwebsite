@@ -87,6 +87,7 @@ def default_data():
         "past_events": [],
         "songs": [],
         "gallery": [],
+        "members": [{"name": "", "bio": "", "image": None} for _ in range(7)],
     }
 
 
@@ -224,6 +225,11 @@ def contact():
     return render_template("contact.html", data=load_data(), active="contact")
 
 
+@app.route("/members")
+def members():
+    return render_template("members.html", data=load_data(), active="members")
+
+
 # ---------- Admin ----------
 
 @app.route("/<key>", methods=["GET"])
@@ -291,6 +297,22 @@ def admin_save(key):
         path = save_upload(f)
         if path:
             data["gallery"].append(path)
+
+    member_names = request.form.getlist("member_name")
+    member_bios = request.form.getlist("member_bio")
+    member_existing = request.form.getlist("member_image_existing")
+    member_files = request.files.getlist("member_image_new")
+    members_out = []
+    for i in range(7):
+        name = member_names[i].strip() if i < len(member_names) else ""
+        bio = member_bios[i].strip() if i < len(member_bios) else ""
+        img = member_existing[i] if i < len(member_existing) else ""
+        if i < len(member_files):
+            uploaded = save_upload(member_files[i])
+            if uploaded:
+                img = uploaded
+        members_out.append({"name": name, "bio": bio, "image": img or None})
+    data["members"] = members_out
 
     save_data(data)
     flash("Saved!", "success")

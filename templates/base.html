@@ -14,6 +14,7 @@
     <a href="{{ url_for('store') }}" class="tab {% if active=='store' %}active{% endif %}">Store</a>
     <a href="{{ url_for('songlist') }}" class="tab {% if active=='songlist' %}active{% endif %}">Song List</a>
     <a href="{{ url_for('contact') }}" class="tab {% if active=='contact' %}active{% endif %}">Contact</a>
+    <a href="{{ url_for('members') }}" class="tab {% if active=='members' %}active{% endif %}">Members</a>
   </nav>
 
   {% block content %}{% endblock %}

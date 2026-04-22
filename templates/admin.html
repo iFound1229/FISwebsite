@@ -29,6 +29,12 @@
     .gallery-item img { width: 100%; height: 120px; object-fit: cover; border-radius: 6px; }
     .gallery-item label { display: flex; align-items: center; gap: 6px; font-weight: 500; margin-top: 4px; font-size: 14px; }
     .flash { background: #dcfce7; color: #166534; padding: 12px; border-radius: 8px; margin-bottom: 16px; }
+    .member-admin-row { padding: 8px 0; }
+    .member-admin-header { font-size: 15px; color: rgba(117,198,255,1); margin-bottom: 10px; }
+    .member-admin-body { display: grid; grid-template-columns: 140px 1fr; gap: 20px; align-items: start; }
+    .member-admin-photo { display: flex; flex-direction: column; gap: 6px; }
+    .member-admin-fields { display: flex; flex-direction: column; }
+    @media (max-width: 520px) { .member-admin-body { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -150,6 +156,37 @@
       {% endif %}
       <label style="margin-top:16px;">Add new photos (you can select multiple)</label>
       <input type="file" name="gallery_new" accept="image/*" multiple />
+    </div>
+
+    <div class="card">
+      <h2>Members</h2>
+      <p style="color:#555; margin-bottom:18px; font-size:14px;">Fill in up to 7 band members. Each slot shows a large photo with a text description to the right on the Members page.</p>
+      {% set members = data.members if data.members else [] %}
+      {% for i in range(7) %}
+        {% set m = members[i] if i < members|length else {"name":"","bio":"","image":None} %}
+        <div class="member-admin-row">
+          <div class="member-admin-header">
+            <strong>Member {{ i + 1 }}</strong>
+          </div>
+          <div class="member-admin-body">
+            <div class="member-admin-photo">
+              {% if m.image %}
+                <img class="preview-img" src="{{ asset_url(m.image) }}" style="width:100px;height:120px;object-fit:cover;border-radius:8px;" />
+              {% endif %}
+              <input type="hidden" name="member_image_existing" value="{{ m.image or '' }}" />
+              <label>Photo</label>
+              <input type="file" name="member_image_new" accept="image/*" />
+            </div>
+            <div class="member-admin-fields">
+              <label>Name</label>
+              <input type="text" name="member_name" value="{{ m.name }}" placeholder="Member name" />
+              <label>Bio / Description</label>
+              <textarea name="member_bio" rows="5" style="width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; font-size:14px; resize:vertical;">{{ m.bio }}</textarea>
+            </div>
+          </div>
+        </div>
+        {% if not loop.last %}<hr style="border:none; border-top:1px solid #eef2f7; margin:12px 0;" />{% endif %}
+      {% endfor %}
     </div>
 
     <div class="save-bar">

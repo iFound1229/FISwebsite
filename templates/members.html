@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Members — Frog in Space{% endblock %}
+{% block content %}
+<section class="page-section members-section">
+  <h1 class="page-title">Members</h1>
+
+  {% set has_any = data.members | selectattr('name') | list | length > 0 %}
+  {% if not has_any %}
+    <p class="members-empty">Member profiles coming soon!</p>
+  {% else %}
+    <div class="members-list">
+      {% for m in data.members %}
+        {% if m.name or m.bio or m.image %}
+        <div class="member-card">
+          <div class="member-photo-wrap">
+            {% if m.image %}
+              <img class="member-photo" src="{{ asset_url(m.image) }}" alt="{{ m.name }}" />
+            {% else %}
+              <div class="member-photo-placeholder">
+                <span>No Photo</span>
+              </div>
+            {% endif %}
+          </div>
+          <div class="member-info">
+            {% if m.name %}<h2 class="member-name">{{ m.name }}</h2>{% endif %}
+            {% if m.bio %}
+              <div class="member-bio">
+                {% for para in m.bio.split('\n') %}
+                  {% if para.strip() %}<p>{{ para.strip() }}</p>{% endif %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</section>
+{% endblock %}
