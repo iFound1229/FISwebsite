@@ -262,13 +262,15 @@ section h2 {
 .suggestion-box {
   background: #fff;
   border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 30px;
+  padding: 12px;
+  margin: 0 auto 24px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  max-width: 420px;
 }
 
 .suggestion-box iframe {
   width: 100% !important;
+  max-height: 320px !important;
   border: none;
 }
 
