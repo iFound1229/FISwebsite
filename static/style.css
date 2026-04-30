@@ -259,6 +259,19 @@ section h2 {
 
 .contact-btn:hover { transform: translateY(-2px); }
 
+.suggestion-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.suggestion-box iframe {
+  width: 100% !important;
+  border: none;
+}
+
 .songs-list {
   list-style: none;
   max-width: 700px;

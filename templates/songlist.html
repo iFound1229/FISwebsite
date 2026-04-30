@@ -3,6 +3,12 @@
 {% block content %}
 <section class="page-section">
   <h1 class="page-title">Song List</h1>
+
+  <div class="suggestion-box">
+    <h2 style="text-align:center; margin-bottom:16px;">Suggest a Song</h2>
+    <script type="text/javascript" src="https://www.jotform.com/jsform/261195831639061"></script>
+  </div>
+
   {% if data.songs %}
     <ul class="songs-list">
       {% for s in data.songs %}
