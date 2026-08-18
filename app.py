@@ -43,36 +43,10 @@ app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
 # ---------- DB helpers ----------
 
 def get_conn():
-    # Railway normally provides DATABASE_URL when the Postgres service is
-    # referenced by the web service. Accept the lowercase spelling too, since
-    # environment variable names are case-sensitive and it is an easy setup
-    # mistake to make in Railway.
-    url = os.environ.get("DATABASE_URL") or os.environ.get("database_url")
-    if url:
-        return psycopg2.connect(url)
-
-    # Also support Railway/Postgres clients that expose connection details as
-    # individual PG* variables instead of a single URL.
-    pg_host = os.environ.get("PGHOST")
-    pg_port = os.environ.get("PGPORT")
-    pg_user = os.environ.get("PGUSER")
-    pg_password = os.environ.get("PGPASSWORD")
-    pg_database = os.environ.get("PGDATABASE")
-    if all((pg_host, pg_port, pg_user, pg_password, pg_database)):
-        return psycopg2.connect(
-            host=pg_host,
-            port=pg_port,
-            user=pg_user,
-            password=pg_password,
-            dbname=pg_database,
-            sslmode=os.environ.get("PGSSLMODE", "prefer"),
-        )
-
-    raise RuntimeError(
-        "PostgreSQL is not configured. Set DATABASE_URL on the Railway web "
-        "service by adding a reference to the Postgres service's DATABASE_URL "
-        "variable."
-    )
+    url = os.environ.get("DATABASE_URL")
+    if not url:
+        raise RuntimeError("DATABASE_URL is not set")
+    return psycopg2.connect(url)
 
 
 def init_db():
