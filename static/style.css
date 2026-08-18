@@ -164,11 +164,11 @@ section h2 {
   align-items: center;
   gap: 10px;
   padding: 12px 24px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(223, 247, 229, 0.95));
-  color: #1a3a5c;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
+  color: #123f35;
   text-decoration: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 800;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
 }
@@ -199,12 +199,12 @@ section h2 {
   align-items: center;
   justify-content: center;
   height: 300px;
-  background-color: #fff;
-  color: #1a3a5c;
-  border: 2px dashed #1a3a5c;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
+  color: #123f35;
+  border: 2px dashed #2f8666;
   border-radius: 12px;
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .events-list {
@@ -218,7 +218,7 @@ section h2 {
   justify-content: center;
   gap: 0;
   margin-bottom: 24px;
-  background: #fff;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
   border-radius: 999px;
   padding: 6px;
   width: fit-content;
@@ -233,8 +233,8 @@ section h2 {
   padding: 10px 28px;
   border-radius: 999px;
   font-size: 16px;
-  font-weight: 600;
-  color: #1a3a5c;
+  font-weight: 800;
+  color: #123f35;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
 }
@@ -250,7 +250,8 @@ section h2 {
 .event-item {
   display: flex;
   align-items: center;
-  background-color: #fff;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
+  color: #123f35;
   border-radius: 8px;
   padding: 16px 20px;
   margin-bottom: 12px;
@@ -268,20 +269,21 @@ section h2 {
 
 .event-date {
   font-weight: 700;
-  color: rgba(117, 198, 255, 1);
+  color: #236b58;
   min-width: 100px;
   font-size: 18px;
 }
 
 .event-name {
-  font-weight: 600;
+  font-weight: 800;
   font-size: 18px;
 }
 
 .event-location {
-  color: #555;
+  color: #245848;
   font-size: 14px;
   margin-top: 2px;
+  font-weight: 600;
 }
 
 .page-section {
@@ -311,18 +313,21 @@ section h2 {
 }
 
 .bio-content {
-  background: #fff;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
+  color: #123f35;
   border-radius: 12px;
   padding: 30px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   line-height: 1.7;
   font-size: 16px;
+  font-weight: 600;
 }
 
 .bio-content h3 {
   margin: 22px 0 10px;
   font-size: 20px;
-  color: rgba(117, 198, 255, 1);
+  color: #1e604d;
+  font-weight: 800;
 }
 
 .bio-content h3:first-child { margin-top: 0; }
@@ -330,6 +335,7 @@ section h2 {
 .bio-content p {
   margin-bottom: 14px;
   white-space: pre-wrap;
+  font-weight: 600;
 }
 
 .contact-btn {
@@ -351,7 +357,8 @@ section h2 {
   list-style: none;
   max-width: 700px;
   margin: 0 auto;
-  background: #fff;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
+  color: #123f35;
   border-radius: 8px;
   padding: 16px 24px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
@@ -359,15 +366,16 @@ section h2 {
 
 .song-item {
   padding: 8px 0;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid rgba(41, 119, 83, 0.22);
   font-size: 16px;
+  font-weight: 600;
 }
 
 .song-item:last-child { border-bottom: none; }
 
-.song-title { font-weight: 600; }
+.song-title { font-weight: 800; }
 
-.song-artist { color: #555; margin-left: 6px; }
+.song-artist { color: #245848; margin-left: 6px; font-weight: 600; }
 
 .slide img {
   width: 100%;
@@ -387,7 +395,7 @@ section h2 {
 .slides {
   position: relative;
   height: 400px;
-  background-color: #fff;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
 }
 
 .slide {
@@ -398,6 +406,7 @@ section h2 {
   justify-content: center;
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
 }
 
 .slide.active {
@@ -406,8 +415,8 @@ section h2 {
 
 .slide-placeholder {
   font-size: 24px;
-  color: #1a3a5c;
-  font-weight: 600;
+  color: #123f35;
+  font-weight: 800;
 }
 
 .slide-btn {
@@ -480,7 +489,7 @@ section h2 {
 .member-card {
   display: flex;
   gap: 32px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 250, 255, 0.95));
+  background: linear-gradient(145deg, rgba(205, 241, 211, 0.98), rgba(145, 207, 163, 0.96));
   border-radius: 16px;
   padding: 28px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
@@ -522,7 +531,7 @@ section h2 {
 .member-name {
   font-size: 26px;
   font-weight: 700;
-  color: #1a3a5c;
+  color: #123f35;
   margin-bottom: 14px;
 }
 
@@ -534,7 +543,8 @@ section h2 {
 .member-bio {
   line-height: 1.75;
   font-size: 16px;
-  color: #2c4a6e;
+  color: #1d5142;
+  font-weight: 600;
 }
 
 .member-bio p {
