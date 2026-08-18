@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
-  <header class="title-section">
+<main class="landing-page">
+  <header class="title-section landing-hero">
     <div class="logo-wrapper">
       {% if data.logo %}
         <img src="{{ asset_url(data.logo) }}" alt="Logo" class="logo" />
@@ -63,4 +64,5 @@
       {% endif %}
     </div>
   </section>
+  </main>
 {% endblock %}

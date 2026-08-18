@@ -1,6 +1,8 @@
 (function () {
   const revealTargets = document.querySelectorAll(
-    '.page-section > *, .events-section, .member-card, .bio-content, .songs-list, .slideshow'
+    '.page-section > *, .landing-hero, .landing-page > section, ' +
+    '.landing-page .social-link, .landing-page .feature-image, ' +
+    '.events-section, .member-card, .bio-content, .songs-list, .slideshow'
   );
 
   if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && revealTargets.length) {
