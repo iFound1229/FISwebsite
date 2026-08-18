@@ -160,9 +160,9 @@
 
     <div class="card">
       <h2>Members</h2>
-      <p style="color:#555; margin-bottom:18px; font-size:14px;">Fill in up to 7 band members. Each slot shows a large photo with a text description to the right on the Members page.</p>
+      <p style="color:#555; margin-bottom:18px; font-size:14px;">Fill in up to 8 band members. Each slot shows a large photo with a text description to the right on the Members page.</p>
       {% set members = data.members if data.members else [] %}
-      {% for i in range(7) %}
+      {% for i in range(8) %}
         {% set m = members[i] if i < members|length else {"name":"","bio":"","image":None} %}
         <div class="member-admin-row">
           <div class="member-admin-header">

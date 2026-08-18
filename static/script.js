@@ -1,4 +1,24 @@
 (function () {
+  const revealTargets = document.querySelectorAll(
+    '.page-section > *, .events-section, .member-card, .bio-content, .songs-list, .slideshow'
+  );
+
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && revealTargets.length) {
+    const revealObserver = new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12 });
+
+    revealTargets.forEach((element, index) => {
+      element.classList.add('reveal-on-scroll');
+      element.style.setProperty('--reveal-delay', `${Math.min(index * 45, 240)}ms`);
+      revealObserver.observe(element);
+    });
+  }
+
   const slides = document.querySelectorAll('.slide');
   const dots = document.querySelectorAll('.dot');
   const prevBtn = document.querySelector('.slide-btn.prev');

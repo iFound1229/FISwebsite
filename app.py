@@ -7,12 +7,15 @@ from pathlib import Path
 import psycopg2
 import psycopg2.extras
 from flask import (
-    Flask, render_template, request, redirect, url_for, abort, flash, Response
+    Flask, render_template, request, redirect, url_for, abort, flash, Response,
+    jsonify, session
 )
 
 BASE_DIR = Path(__file__).parent
 
 ADMIN_KEY = "lilyrose"
+MEMBER_SLOT_COUNT = 8
+NEW_MEMBER_NAME = "New Member"
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
 DEFAULT_BIO = """Introduction
@@ -76,6 +79,8 @@ def init_db():
 
 
 def default_data():
+    members = [{"name": "", "bio": "", "image": None} for _ in range(MEMBER_SLOT_COUNT)]
+    members[-1]["name"] = NEW_MEMBER_NAME
     return {
         "logo": None,
         "feature": None,
@@ -87,7 +92,7 @@ def default_data():
         "past_events": [],
         "songs": [],
         "gallery": [],
-        "members": [{"name": "", "bio": "", "image": None} for _ in range(7)],
+        "members": members,
     }
 
 
@@ -98,6 +103,14 @@ def load_data():
     base = default_data()
     if row:
         base.update(row[0] or {})
+    members = list(base.get("members") or [])
+    while len(members) < MEMBER_SLOT_COUNT:
+        members.append({
+            "name": NEW_MEMBER_NAME if len(members) == MEMBER_SLOT_COUNT - 1 else "",
+            "bio": "",
+            "image": None,
+        })
+    base["members"] = members[:MEMBER_SLOT_COUNT]
     return base
 
 
@@ -227,21 +240,39 @@ def contact():
 
 @app.route("/members")
 def members():
-    return render_template("members.html", data=load_data(), active="members")
+    unlock_nonce = uuid.uuid4().hex
+    session["admin_unlock_nonce"] = unlock_nonce
+    return render_template(
+        "members.html",
+        data=load_data(),
+        active="members",
+        unlock_nonce=unlock_nonce,
+    )
+
+
+@app.route("/members/unlock", methods=["POST"])
+def unlock_admin():
+    nonce = request.form.get("nonce", "")
+    expected_nonce = session.get("admin_unlock_nonce")
+    if not nonce or nonce != expected_nonce:
+        return jsonify({"ok": False}), 403
+    session.pop("admin_unlock_nonce", None)
+    session["admin_unlocked"] = True
+    return jsonify({"ok": True})
 
 
 # ---------- Admin ----------
 
 @app.route("/<key>", methods=["GET"])
 def admin(key):
-    if key != ADMIN_KEY:
+    if key != ADMIN_KEY or not session.get("admin_unlocked"):
         abort(404)
     return render_template("admin.html", data=load_data(), key=key)
 
 
 @app.route("/<key>/save", methods=["POST"])
 def admin_save(key):
-    if key != ADMIN_KEY:
+    if key != ADMIN_KEY or not session.get("admin_unlocked"):
         abort(404)
     data = load_data()
 
@@ -303,7 +334,7 @@ def admin_save(key):
     member_existing = request.form.getlist("member_image_existing")
     member_files = request.files.getlist("member_image_new")
     members_out = []
-    for i in range(7):
+    for i in range(MEMBER_SLOT_COUNT):
         name = member_names[i].strip() if i < len(member_names) else ""
         bio = member_bios[i].strip() if i < len(member_bios) else ""
         img = member_existing[i] if i < len(member_existing) else ""
@@ -311,6 +342,8 @@ def admin_save(key):
             uploaded = save_upload(member_files[i])
             if uploaded:
                 img = uploaded
+        if i == MEMBER_SLOT_COUNT - 1 and not name:
+            name = NEW_MEMBER_NAME
         members_out.append({"name": name, "bio": bio, "image": img or None})
     data["members"] = members_out
 

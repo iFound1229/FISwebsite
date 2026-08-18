@@ -6,9 +6,22 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: rgba(158, 221, 255, 1);
+  background: linear-gradient(135deg, rgba(158, 221, 255, 1), rgba(176, 226, 250, 1) 52%, rgba(143, 207, 245, 1));
   color: #1a3a5c;
   min-height: 100vh;
+  position: relative;
+  isolation: isolate;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 8% 18%, rgba(255, 255, 255, 0.2), transparent 28%),
+    radial-gradient(circle at 92% 82%, rgba(77, 166, 222, 0.11), transparent 32%);
 }
 
 .tabs {
@@ -36,7 +49,7 @@ body {
 }
 
 .title-section {
-  background-color: rgba(117, 198, 255, 1);
+  background: linear-gradient(120deg, rgba(117, 198, 255, 1), rgba(105, 190, 246, 1));
   padding: 60px 20px;
   display: flex;
   justify-content: center;
@@ -222,6 +235,19 @@ section h2 {
   color: #1a3a5c;
 }
 
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.65s ease var(--reveal-delay, 0ms),
+    transform 0.65s ease var(--reveal-delay, 0ms);
+}
+
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .bio-content {
   background: #fff;
   border-radius: 12px;
@@ -392,7 +418,7 @@ section h2 {
 .member-card {
   display: flex;
   gap: 32px;
-  background: #fff;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 250, 255, 0.95));
   border-radius: 16px;
   padding: 28px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
@@ -438,6 +464,22 @@ section h2 {
   margin-bottom: 14px;
 }
 
+.member-name-trigger {
+  cursor: pointer;
+  border-radius: 8px;
+  width: fit-content;
+  padding: 2px 8px;
+  margin-left: -8px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.member-name-trigger:hover,
+.member-name-trigger:focus-visible {
+  color: rgba(75, 165, 222, 1);
+  background: rgba(117, 198, 255, 0.12);
+  outline: none;
+}
+
 .member-bio {
   line-height: 1.75;
   font-size: 16px;
@@ -464,5 +506,13 @@ section h2 {
   .member-photo-placeholder {
     width: 100%;
     height: 240px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }

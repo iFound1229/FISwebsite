@@ -11,7 +11,7 @@
     <div class="members-list">
       {% for m in data.members %}
         {% if m.name or m.bio or m.image %}
-        <div class="member-card">
+        <div class="member-card{% if loop.last %} member-card-trigger{% endif %}">
           <div class="member-photo-wrap">
             {% if m.image %}
               <img class="member-photo" src="{{ asset_url(m.image) }}" alt="{{ m.name }}" />
@@ -22,7 +22,17 @@
             {% endif %}
           </div>
           <div class="member-info">
-            {% if m.name %}<h2 class="member-name">{{ m.name }}</h2>{% endif %}
+            {% if m.name %}
+              <h2
+                class="member-name{% if loop.last %} member-name-trigger{% endif %}"
+                {% if loop.last %}
+                data-unlock-nonce="{{ unlock_nonce }}"
+                role="button"
+                tabindex="0"
+                aria-label="Member name"
+                {% endif %}
+              >{{ m.name }}</h2>
+            {% endif %}
             {% if m.bio %}
               <div class="member-bio">
                 {% for para in m.bio.split('\n') %}
@@ -37,4 +47,46 @@
     </div>
   {% endif %}
 </section>
+<script>
+  (function () {
+    const trigger = document.querySelector('.member-name-trigger');
+    if (!trigger) return;
+
+    let clicks = 0;
+    let resetTimer;
+
+    function resetClicks() {
+      clicks = 0;
+      clearTimeout(resetTimer);
+    }
+
+    function registerClick() {
+      clicks += 1;
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(resetClicks, 1400);
+
+      if (clicks !== 5) return;
+      fetch('{{ url_for("unlock_admin") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ nonce: trigger.dataset.unlockNonce }),
+        credentials: 'same-origin'
+      }).then(function (response) {
+        if (response.ok) {
+          window.location.href = '{{ url_for("admin", key="lilyrose") }}';
+        } else {
+          resetClicks();
+        }
+      }).catch(resetClicks);
+    }
+
+    trigger.addEventListener('click', registerClick);
+    trigger.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        registerClick();
+      }
+    });
+  })();
+</script>
 {% endblock %}
