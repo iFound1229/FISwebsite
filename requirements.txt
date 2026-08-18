@@ -1,8 +1,3 @@
 Flask>=3.0
 psycopg2-binary>=2.9
 gunicorn>=21.2
-email_validator
-flask
-flask-sqlalchemy
-gunicorn
-psycopg2-binary
