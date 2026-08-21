@@ -4,6 +4,10 @@
   padding: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   font-family: Inter, "Avenir Next", "Segoe UI", sans-serif;
   background: linear-gradient(145deg, rgba(158, 221, 255, 1), rgba(181, 232, 247, 1) 42%, rgba(211, 240, 215, 1));

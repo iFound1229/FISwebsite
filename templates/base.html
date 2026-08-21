@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}Frog in Space{% endblock %}</title>
-    <link rel="icon" href="{{ asset_url(data.logo) if data is defined and data.logo else url_for('static', filename='uploads/logo.png') }}" />
+    <link rel="icon" href="{{ url_for('static', filename='uploads/frog-space-icon.png') }}" />
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
 </head>
 <body>
   <nav class="tabs">
     <a href="{{ url_for('home') }}" class="nav-brand" aria-label="Frog in Space home">
-      <img src="{{ asset_url(data.logo) if data is defined and data.logo else url_for('static', filename='uploads/logo.png') }}" alt="Frog in Space" />
+      <img src="{{ url_for('static', filename='uploads/frog-space-icon.png') }}" alt="Frog in Space" />
     </a>
     <a href="{{ url_for('home') }}" class="tab {% if active=='home' %}active{% endif %}">Home</a>
     <a href="{{ url_for('bio') }}" class="tab {% if active=='bio' %}active{% endif %}">Bio</a>
