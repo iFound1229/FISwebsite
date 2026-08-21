@@ -73,7 +73,7 @@
         credentials: 'same-origin'
       }).then(function (response) {
         if (response.ok) {
-          window.location.href = '{{ url_for("admin", key="lilyrose") }}';
+          window.location.href = '{{ url_for("admin_login") }}';
         } else {
           resetClicks();
         }

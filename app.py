@@ -1,21 +1,34 @@
 import json
+import hashlib
+import hmac
 import mimetypes
 import os
+import re
+import secrets
 import uuid
+from datetime import datetime, timedelta, timezone
+from functools import wraps
 from pathlib import Path
 
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 import psycopg2
 import psycopg2.extras
 from flask import (
     Flask, render_template, request, redirect, url_for, abort, flash, Response,
-    jsonify, session
+    jsonify, session, make_response
 )
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 BASE_DIR = Path(__file__).parent
 
-ADMIN_KEY = "lilyrose"
 MEMBER_SLOT_COUNT = 8
 NEW_MEMBER_NAME = "New Member"
+ADMIN_PANEL_PATH = "/lilyrose"
+ADMIN_INACTIVITY_SECONDS = 15 * 60
+ADMIN_MAX_LIFETIME_SECONDS = 8 * 60 * 60
+LOGIN_WINDOW = timedelta(minutes=20)
+LOGIN_MAX_FAILURES = 5
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
 DEFAULT_BIO = """Introduction
@@ -39,8 +52,21 @@ FIS is beyond excited for its future. We recently played at our Junior Prom whic
 Thanks for your interest in Frog in Space!"""
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET", "frog-in-space-secret")
+app.secret_key = (
+    os.environ.get("SESSION_SECRET")
+    or os.environ.get("FLASK_SECRET")
+    or secrets.token_hex(32)
+)
+PRODUCTION_MODE = os.environ.get("APP_ENV", "").lower() == "production"
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SECURE=PRODUCTION_MODE,
+    SESSION_COOKIE_SAMESITE="Strict",
+)
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+PASSWORD_HASHER = PasswordHasher()
+EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 # ---------- DB helpers ----------
@@ -69,6 +95,26 @@ def init_db():
               created_at TIMESTAMP DEFAULT NOW()
             );
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS admin_sessions (
+              session_hash TEXT PRIMARY KEY,
+              csrf_hash TEXT NOT NULL,
+              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+              last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+              expires_at TIMESTAMPTZ NOT NULL,
+              invalidated_at TIMESTAMPTZ,
+              ip_address INET,
+              user_agent TEXT
+            );
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS admin_login_limits (
+              rate_key TEXT PRIMARY KEY,
+              window_started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+              failures INTEGER NOT NULL DEFAULT 0,
+              blocked_until TIMESTAMPTZ
+            );
+        """)
         cur.execute("SELECT 1 FROM site_data WHERE id = 1")
         if not cur.fetchone():
             cur.execute(
@@ -84,6 +130,7 @@ def default_data():
     return {
         "logo": None,
         "feature": None,
+        "login_image": None,
         "instagram": "https://www.instagram.com/froginspaceband/",
         "youtube": "",
         "contact_email": "colton.gernon@gmail.com",
@@ -121,6 +168,212 @@ def save_data(data):
             (json.dumps(data),),
         )
         conn.commit()
+
+
+# ---------- Admin authentication ----------
+
+def _token_hash(value):
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _client_ip():
+    return request.remote_addr or "unknown"
+
+
+def _rate_keys(email):
+    normalized_email = email.casefold()[:254]
+    return [f"ip:{_client_ip()}", f"email:{normalized_email}"]
+
+
+def _login_is_limited(rate_keys):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT blocked_until
+            FROM admin_login_limits
+            WHERE rate_key = ANY(%s)
+              AND window_started_at >= NOW() - INTERVAL '20 minutes'
+              AND blocked_until > NOW()
+            """,
+            (rate_keys,),
+        )
+        return cur.fetchone() is not None
+
+
+def _record_failed_login(rate_keys):
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn, conn.cursor() as cur:
+        for rate_key in rate_keys:
+            cur.execute(
+                """
+                SELECT window_started_at, failures
+                FROM admin_login_limits
+                WHERE rate_key = %s
+                FOR UPDATE
+                """,
+                (rate_key,),
+            )
+            row = cur.fetchone()
+            if not row or row[0] < now - LOGIN_WINDOW:
+                window_started = now
+                failures = 1
+            else:
+                window_started = row[0]
+                failures = row[1] + 1
+
+            backoff_seconds = 0
+            if failures >= LOGIN_MAX_FAILURES:
+                backoff_seconds = min(15 * 60, 5 * (2 ** min(failures - LOGIN_MAX_FAILURES, 8)))
+            blocked_until = now + timedelta(seconds=backoff_seconds) if backoff_seconds else None
+            cur.execute(
+                """
+                INSERT INTO admin_login_limits
+                  (rate_key, window_started_at, failures, blocked_until)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (rate_key) DO UPDATE SET
+                  window_started_at = EXCLUDED.window_started_at,
+                  failures = EXCLUDED.failures,
+                  blocked_until = EXCLUDED.blocked_until
+                """,
+                (rate_key, window_started, failures, blocked_until),
+            )
+        conn.commit()
+
+
+def _clear_login_limits(rate_keys):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM admin_login_limits WHERE rate_key = ANY(%s)", (rate_keys,))
+        conn.commit()
+
+
+def _admin_credentials():
+    email = os.environ.get("ADMIN_EMAIL", "").strip().casefold()
+    password_hash = os.environ.get("ADMIN_PASSWORD_HASH", "").strip()
+    if not EMAIL_PATTERN.fullmatch(email) or not password_hash:
+        return None, None
+    return email, password_hash
+
+
+def _get_admin_session():
+    raw_token = request.cookies.get("admin_session", "")
+    if not raw_token:
+        return None
+
+    session_hash = _token_hash(raw_token)
+    now = datetime.now(timezone.utc)
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT session_hash, csrf_hash, created_at, last_seen_at, expires_at
+            FROM admin_sessions
+            WHERE session_hash = %s AND invalidated_at IS NULL
+            """,
+            (session_hash,),
+        )
+        row = cur.fetchone()
+        if not row:
+            return None
+
+        def utc(value):
+            return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+
+        if (
+            utc(row[2]) + timedelta(seconds=ADMIN_MAX_LIFETIME_SECONDS) <= now
+            or utc(row[3]) + timedelta(seconds=ADMIN_INACTIVITY_SECONDS) <= now
+            or utc(row[4]) <= now
+        ):
+            cur.execute(
+                "UPDATE admin_sessions SET invalidated_at = NOW() WHERE session_hash = %s",
+                (session_hash,),
+            )
+            conn.commit()
+            app.logger.info("admin_session_expired ip=%s", _client_ip())
+            return None
+
+        cur.execute(
+            "UPDATE admin_sessions SET last_seen_at = NOW() WHERE session_hash = %s",
+            (session_hash,),
+        )
+        conn.commit()
+
+    return {"session_hash": row[0], "csrf_hash": row[1]}
+
+
+def _create_admin_session():
+    raw_token = secrets.token_urlsafe(32)
+    csrf_token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(seconds=ADMIN_MAX_LIFETIME_SECONDS)
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO admin_sessions
+              (session_hash, csrf_hash, expires_at, ip_address, user_agent)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (
+                _token_hash(raw_token),
+                _token_hash(csrf_token),
+                expires_at,
+                _client_ip() if _client_ip() != "unknown" else None,
+                request.user_agent.string[:512],
+            ),
+        )
+        conn.commit()
+    return raw_token, csrf_token
+
+
+def _invalidate_admin_session(auth):
+    if not auth:
+        return
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            "UPDATE admin_sessions SET invalidated_at = NOW() WHERE session_hash = %s",
+            (auth["session_hash"],),
+        )
+        conn.commit()
+
+
+def _csrf_is_valid(auth):
+    submitted = request.form.get("csrf_token", "")
+    return bool(submitted) and hmac.compare_digest(_token_hash(submitted), auth["csrf_hash"])
+
+
+def _rotate_csrf_token(auth):
+    csrf_token = secrets.token_urlsafe(32)
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute(
+            "UPDATE admin_sessions SET csrf_hash = %s WHERE session_hash = %s",
+            (_token_hash(csrf_token), auth["session_hash"]),
+        )
+        conn.commit()
+    return csrf_token
+
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        auth = _get_admin_session()
+        if not auth:
+            app.logger.warning("admin_authorization_failed path=%s ip=%s", request.path, _client_ip())
+            return redirect(url_for("admin_login", next=ADMIN_PANEL_PATH))
+        request.admin_auth = auth
+        return view(*args, **kwargs)
+
+    return wrapped
+
+
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+        "script-src 'self' 'unsafe-inline'; connect-src 'self'; frame-ancestors 'none'; "
+        "base-uri 'self'; form-action 'self'",
+    )
+    return response
 
 
 # ---------- Media (images) stored in Postgres ----------
@@ -257,23 +510,126 @@ def unlock_admin():
     if not nonce or nonce != expected_nonce:
         return jsonify({"ok": False}), 403
     session.pop("admin_unlock_nonce", None)
-    session["admin_unlocked"] = True
     return jsonify({"ok": True})
 
 
 # ---------- Admin ----------
 
-@app.route("/<key>", methods=["GET"])
-def admin(key):
-    if key != ADMIN_KEY or not session.get("admin_unlocked"):
-        abort(404)
-    return render_template("admin.html", data=load_data(), key=key)
+@app.route("/admin", methods=["GET", "POST"])
+def admin_login():
+    if _get_admin_session():
+        return redirect(ADMIN_PANEL_PATH)
+
+    next_path = request.args.get("next", request.form.get("next", ADMIN_PANEL_PATH))
+    if next_path != ADMIN_PANEL_PATH:
+        next_path = ADMIN_PANEL_PATH
+
+    if request.method == "GET":
+        login_csrf = secrets.token_urlsafe(32)
+        response = make_login_response(login_csrf)
+        response.set_cookie(
+            "login_csrf",
+            login_csrf,
+            httponly=True,
+            secure=PRODUCTION_MODE,
+            samesite="Strict",
+            max_age=600,
+            path="/admin",
+        )
+        return response
+
+    email = request.form.get("email", "").strip().casefold()
+    password = request.form.get("password", "")
+    login_csrf = request.form.get("login_csrf", "")
+    cookie_csrf = request.cookies.get("login_csrf", "")
+    generic_error = "Invalid email or password."
+
+    if (
+        not login_csrf
+        or not cookie_csrf
+        or not hmac.compare_digest(login_csrf, cookie_csrf)
+        or len(email) > 254
+        or not EMAIL_PATTERN.fullmatch(email)
+        or not password
+        or len(password) > 256
+    ):
+        flash(generic_error, "error")
+        return redirect(url_for("admin_login", next=next_path))
+
+    rate_keys = _rate_keys(email)
+    if _login_is_limited(rate_keys):
+        flash(generic_error, "error")
+        return redirect(url_for("admin_login", next=next_path))
+
+    configured_email, configured_hash = _admin_credentials()
+    valid = configured_email == email and configured_hash is not None
+    if valid:
+        try:
+            PASSWORD_HASHER.verify(configured_hash, password)
+        except (VerifyMismatchError, VerificationError, InvalidHashError):
+            valid = False
+
+    if not valid:
+        _record_failed_login(rate_keys)
+        app.logger.warning("admin_login_failed ip=%s", _client_ip())
+        flash(generic_error, "error")
+        return redirect(url_for("admin_login", next=next_path))
+
+    _clear_login_limits(rate_keys)
+    raw_token, csrf_token = _create_admin_session()
+    app.logger.info("admin_login_success ip=%s", _client_ip())
+    response = redirect(next_path)
+    response.set_cookie(
+        "admin_session",
+        raw_token,
+        httponly=True,
+        secure=PRODUCTION_MODE,
+        samesite="Strict",
+        path="/",
+    )
+    response.delete_cookie("login_csrf", path="/admin")
+    return response
 
 
-@app.route("/<key>/save", methods=["POST"])
-def admin_save(key):
-    if key != ADMIN_KEY or not session.get("admin_unlocked"):
-        abort(404)
+def make_login_response(login_csrf):
+    return make_response(
+        render_template(
+            "admin_login.html",
+            data=load_data(),
+            login_csrf=login_csrf,
+        )
+    )
+
+
+@app.route("/admin/logout", methods=["POST"])
+@admin_required
+def admin_logout():
+    auth = request.admin_auth
+    if not _csrf_is_valid(auth):
+        abort(400)
+    _invalidate_admin_session(auth)
+    app.logger.info("admin_logout ip=%s", _client_ip())
+    response = redirect(url_for("admin_login"))
+    response.delete_cookie("admin_session", path="/")
+    session.clear()
+    return response
+
+
+@app.route("/lilyrose", methods=["GET"])
+@admin_required
+def admin_panel():
+    return render_template(
+        "admin.html",
+        data=load_data(),
+        csrf_token=_rotate_csrf_token(request.admin_auth),
+    )
+
+
+@app.route("/lilyrose/save", methods=["POST"])
+@admin_required
+def admin_save():
+    if not _csrf_is_valid(request.admin_auth):
+        abort(400)
     data = load_data()
 
     data["instagram"] = request.form.get("instagram", "").strip()
@@ -287,6 +643,9 @@ def admin_save(key):
     feature = save_upload(request.files.get("feature"))
     if feature:
         data["feature"] = feature
+    login_image = save_upload(request.files.get("login_image"))
+    if login_image:
+        data["login_image"] = login_image
 
     def collect_events(prefix):
         dates = request.form.getlist(f"{prefix}_date")
@@ -348,8 +707,9 @@ def admin_save(key):
     data["members"] = members_out
 
     save_data(data)
+    app.logger.info("admin_content_saved ip=%s", _client_ip())
     flash("Saved!", "success")
-    return redirect(url_for("admin", key=key))
+    return redirect(url_for("admin_panel"))
 
 
 # ---------- Startup ----------

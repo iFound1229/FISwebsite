@@ -8,7 +8,9 @@
   <style>
     body { background: #f4f7fb; color: #1a3a5c; }
     .admin-wrap { max-width: 900px; margin: 0 auto; padding: 30px 20px 80px; }
-    .admin-wrap h1 { margin-bottom: 8px; }
+    .admin-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:8px; }
+    .admin-heading h1 { margin:0; }
+    .logout-btn { background:#e2e8f0; color:#1a3a5c; border:0; border-radius:6px; padding:9px 13px; font-weight:700; cursor:pointer; }
     .admin-wrap p.subtitle { color: #555; margin-bottom: 24px; }
     .card { background: #fff; border-radius: 12px; padding: 22px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
     .card h2 { margin: 0 0 14px; font-size: 20px; text-align: left; }
@@ -39,7 +41,13 @@
 </head>
 <body>
 <div class="admin-wrap">
-  <h1>Admin Panel</h1>
+  <div class="admin-heading">
+    <h1>Admin Panel</h1>
+    <form method="POST" action="{{ url_for('admin_logout') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+      <button type="submit" class="logout-btn">Log Out</button>
+    </form>
+  </div>
   <p class="subtitle">Update your site content. Click <strong>Save Changes</strong> when done.</p>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -48,7 +56,8 @@
     {% endfor %}
   {% endwith %}
 
-  <form method="POST" action="{{ url_for('admin_save', key=key) }}" enctype="multipart/form-data">
+  <form method="POST" action="{{ url_for('admin_save') }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
 
     <div class="card">
       <h2>Logo</h2>
@@ -62,6 +71,14 @@
       {% if data.feature %}<img class="preview-img" src="{{ asset_url(data.feature) }}" />{% endif %}
       <label>Replace feature picture</label>
       <input type="file" name="feature" accept="image/*" />
+    </div>
+
+    <div class="card">
+      <h2>Admin Login Image</h2>
+      <p style="color:#555; margin-bottom:12px; font-size:14px;">This image appears on the secure admin login screen.</p>
+      {% if data.login_image %}<img class="preview-img" src="{{ asset_url(data.login_image) }}" />{% endif %}
+      <label>Replace login image</label>
+      <input type="file" name="login_image" accept="image/*" />
     </div>
 
     <div class="card">
