@@ -10,7 +10,6 @@
         {% set initial_image = ((product.variants or [])[0].images or [])[0] if (product.variants or []) else '' %}
         <img data-detail-image {% if initial_image %}src="{{ asset_url(initial_image) }}"{% else %}hidden{% endif %} alt="{{ product.name }}" />
       </div>
-      <div class="detail-thumbs" data-detail-thumbs></div>
     </div>
     <div class="detail-info">
       <p class="eyebrow">FROG IN SPACE MERCH</p>

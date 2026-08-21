@@ -443,10 +443,6 @@ section h2 {
 .detail-arrow { border: 0; cursor: pointer; }
 .detail-prev { left: 12px; }
 .detail-next { right: 12px; }
-.detail-thumbs { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-.detail-thumbs button { width: 78px; height: 88px; border: 2px solid transparent; border-radius: 8px; padding: 0 0 4px; overflow: hidden; cursor: pointer; background: #e8f4ff; color: #245848; font: inherit; font-size: 10px; font-weight: 700; }
-.detail-thumbs button.active { border-color: #2f8666; }
-.detail-thumbs img { width: 100%; height: 66px; object-fit: cover; display: block; }
 .detail-description { color: #245848; line-height: 1.6; font-weight: 600; margin-bottom: 20px; }
 .cart-link-btn { display: inline-block; margin: 14px 0 0 8px; padding: 13px 22px; border-radius: 8px; background: #d1f0d8; color: #123f35; font-weight: 800; text-decoration: none; }
 .cart-link-btn:hover { background: #b8e5c4; }

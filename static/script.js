@@ -105,7 +105,6 @@
   const detailImage = document.querySelector('[data-detail-image]');
   if (product && detailImage) {
     const placeholder = document.querySelector('[data-detail-placeholder]');
-    const thumbs = document.querySelector('[data-detail-thumbs]');
     const picker = document.querySelector('[data-color-picker]');
     const selection = document.querySelector('[data-detail-selection]');
     const note = document.querySelector('[data-cart-note]');
@@ -121,7 +120,6 @@
       detailImage.hidden = !source;
       placeholder.hidden = !!source;
       if (source) detailImage.src = source;
-      thumbs.innerHTML = frames.map((frame, i) => `<button type="button" class="${i === frameIndex ? 'active' : ''}" data-image-index="${i}"><img src="${assetSrc(frame.src)}" alt="${frame.color}"><span>${frame.color || 'Default'}</span></button>`).join('');
       selection.textContent = selected && selected.color ? `Color: ${selected.color}` : '';
     }
     if (variants.length > 1) {
@@ -133,10 +131,6 @@
         render();
       }));
     }
-    thumbs.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-image-index]');
-      if (button) { frameIndex = Number(button.dataset.imageIndex); render(); }
-    });
     document.querySelector('[data-add-cart]').addEventListener('click', () => {
       fetch('/store/cart/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
         .then(async (response) => {
