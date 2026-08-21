@@ -5,6 +5,7 @@ import mimetypes
 import os
 import re
 import secrets
+import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -29,6 +30,9 @@ ADMIN_INACTIVITY_SECONDS = 15 * 60
 ADMIN_MAX_LIFETIME_SECONDS = 15 * 60
 LOGIN_WINDOW = timedelta(minutes=20)
 LOGIN_MAX_FAILURES = 5
+CART_ADD_LIMIT = 5
+CART_ADD_WINDOW_SECONDS = 60
+CART_ADD_ATTEMPTS = {}
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
 
 DEFAULT_BIO = """Introduction
@@ -494,6 +498,28 @@ def store_item(item_index):
         item_index=item_index,
         active="store",
     )
+
+
+@app.route("/store/cart")
+def store_cart():
+    return render_template("store_cart.html", active="store")
+
+
+@app.route("/store/cart/add", methods=["POST"])
+def add_to_cart():
+    now = time.monotonic()
+    ip = _client_ip()
+    attempts = [stamp for stamp in CART_ADD_ATTEMPTS.get(ip, []) if now - stamp < CART_ADD_WINDOW_SECONDS]
+    if len(attempts) >= CART_ADD_LIMIT:
+        retry_after = max(1, int(CART_ADD_WINDOW_SECONDS - (now - attempts[0])))
+        response = jsonify({"ok": False, "message": "Please wait a moment before adding more items."})
+        response.status_code = 429
+        response.headers["Retry-After"] = str(retry_after)
+        CART_ADD_ATTEMPTS[ip] = attempts
+        return response
+    attempts.append(now)
+    CART_ADD_ATTEMPTS[ip] = attempts
+    return jsonify({"ok": True})
 
 
 @app.route("/songlist")

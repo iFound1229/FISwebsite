@@ -8,8 +8,6 @@
       <div class="detail-main-image">
         <div class="product-placeholder" data-detail-placeholder>FIS</div>
         <img data-detail-image alt="{{ product.name }}" />
-        <button type="button" class="detail-arrow detail-prev" aria-label="Previous image">‹</button>
-        <button type="button" class="detail-arrow detail-next" aria-label="Next image">›</button>
       </div>
       <div class="detail-thumbs" data-detail-thumbs></div>
     </div>
@@ -21,6 +19,7 @@
       <div class="color-picker" data-color-picker></div>
       <p class="detail-selection" data-detail-selection></p>
       <button type="button" class="contact-btn add-cart-btn" data-add-cart>Add to cart</button>
+      <a class="cart-link-btn" href="{{ url_for('store_cart') }}">Go to cart</a>
       <p class="cart-note" data-cart-note>No payment yet — this just saves your selection.</p>
     </div>
   </div>

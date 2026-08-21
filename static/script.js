@@ -61,6 +61,19 @@
 
   if (slides.length > 1) restart();
 
+  const cartKey = 'fis-cart';
+  const readCart = () => {
+    try { return JSON.parse(localStorage.getItem(cartKey) || '[]'); } catch { return []; }
+  };
+  const updateCartCount = () => {
+    const count = readCart().reduce((total, item) => total + (item.quantity || 1), 0);
+    document.querySelectorAll('[data-cart-count]').forEach((node) => {
+      node.textContent = count;
+      node.hidden = count === 0;
+    });
+  };
+  updateCartCount();
+
   document.querySelectorAll('[data-card-product]').forEach((card) => {
     const product = JSON.parse(card.dataset.cardProduct);
     const image = card.querySelector('[data-card-image]');
@@ -114,11 +127,47 @@
       picker.innerHTML = variants.map((v, i) => `<button type="button" class="${i === 0 ? 'active' : ''}" data-variant-index="${i}">${v.color || 'Default'}</button>`).join('');
       picker.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { variantIndex = Number(btn.dataset.variantIndex); imageIndex = 0; picker.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn)); render(); }));
     }
-    document.querySelector('.detail-prev').addEventListener('click', () => { const n = currentImages().length; if (n) { imageIndex = (imageIndex - 1 + n) % n; render(); } });
-    document.querySelector('.detail-next').addEventListener('click', () => { const n = currentImages().length; if (n) { imageIndex = (imageIndex + 1) % n; render(); } });
     document.querySelector('[data-add-cart]').addEventListener('click', () => {
-      note.textContent = `${product.name}${variants[variantIndex].color ? ` — ${variants[variantIndex].color}` : ''} saved to your cart.`;
+      fetch('/store/cart/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+        .then(async (response) => {
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.message || 'Unable to add this item.');
+          const cart = readCart();
+          const color = variants[variantIndex].color || '';
+          const image = currentImages()[imageIndex] || '';
+          const existing = cart.find((item) => item.name === product.name && item.color === color && item.image === image);
+          if (existing) existing.quantity = (existing.quantity || 1) + 1;
+          else cart.push({ name: product.name, price: product.price, color, image, quantity: 1 });
+          localStorage.setItem(cartKey, JSON.stringify(cart));
+          updateCartCount();
+          note.textContent = `${product.name}${color ? ` — ${color}` : ''} saved to your cart.`;
+        })
+        .catch((error) => { note.textContent = error.message; });
     });
     render();
+  }
+
+  const cartItems = document.querySelector('[data-cart-items]');
+  if (cartItems) {
+    const cart = readCart();
+    const empty = document.querySelector('[data-cart-empty]');
+    const checkoutNote = document.querySelector('[data-cart-checkout]');
+    if (cart.length) {
+      empty.hidden = true;
+      checkoutNote.hidden = false;
+      cartItems.innerHTML = cart.map((item, index) => `
+        <article class="cart-item">
+          ${item.image ? `<img src="${item.image.startsWith('media/') ? `/media/${item.image.slice(6)}` : `/static/${item.image}`}" alt="">` : '<div class="cart-item-placeholder">FIS</div>'}
+          <div><h2>${item.name.toUpperCase()}</h2><p>${item.color || 'Default'} · ${item.price}</p></div>
+          <strong>${item.quantity || 1}</strong>
+          <button type="button" data-remove-cart="${index}">Remove</button>
+        </article>`).join('');
+      cartItems.querySelectorAll('[data-remove-cart]').forEach((button) => button.addEventListener('click', () => {
+        const next = readCart();
+        next.splice(Number(button.dataset.removeCart), 1);
+        localStorage.setItem(cartKey, JSON.stringify(next));
+        window.location.reload();
+      }));
+    }
   }
 })();

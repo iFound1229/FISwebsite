@@ -15,6 +15,7 @@
     <a href="{{ url_for('songlist') }}" class="tab {% if active=='songlist' %}active{% endif %}">Song List</a>
     <a href="{{ url_for('contact') }}" class="tab {% if active=='contact' %}active{% endif %}">Contact</a>
     <a href="{{ url_for('members') }}" class="tab {% if active=='members' %}active{% endif %}">Members</a>
+    <a href="{{ url_for('store_cart') }}" class="cart-nav" aria-label="Go to cart" title="Go to cart">🛒<span class="cart-count" data-cart-count>0</span></a>
   </nav>
 
   {% block content %}{% endblock %}

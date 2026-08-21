@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Cart — Frog in Space{% endblock %}
+{% block content %}
+<section class="page-section cart-page">
+  <p class="eyebrow">FROG IN SPACE MERCH</p>
+  <h1 class="page-title">Cart</h1>
+  <div class="cart-items" data-cart-items></div>
+  <div class="store-empty" data-cart-empty>
+    <p>Your cart is empty.</p>
+    <a class="cart-link-btn" href="{{ url_for('store') }}">Back to store</a>
+  </div>
+  <p class="cart-checkout-note" data-cart-checkout hidden>No payment yet — checkout will be available soon.</p>
+</section>
+{% endblock %}
