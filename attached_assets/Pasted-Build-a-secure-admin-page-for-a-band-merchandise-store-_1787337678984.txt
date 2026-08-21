@@ -1,0 +1,164 @@
+Build a secure `/admin` page for a band merchandise store website. The admin area must be production-ready and designed with security as the priority.
+
+### Authentication
+
+Create an email/password login screen at `/admin`.
+
+* Require both email and password.
+* Never hardcode passwords, passcodes, API keys, secrets, service-role keys, or authentication bypasses anywhere in the source code.
+* Store passwords only as strong, salted, one-way password hashes using a modern password hashing algorithm such as Argon2id or bcrypt.
+* Never store plaintext passwords.
+* Never log passwords or authentication credentials.
+* Return generic login errors such as `Invalid email or password` so attackers cannot determine whether an email address exists.
+* Validate and sanitize authentication input on the server.
+* Use secure, HTTP-only, `Secure`, `SameSite` session cookies.
+* Do not store authentication tokens or passwords in `localStorage`.
+* Protect all admin API routes/server actions independently of the frontend `/admin` page.
+
+### Session Security
+
+After a successful login:
+
+* Create a server-side authenticated session.
+* Automatically expire the session after **15 minutes of inactivity**.
+* Also enforce a maximum session lifetime on the server rather than relying only on client-side timers.
+* When the user closes the browser/site, the admin session must not persist. Use a session cookie rather than a persistent login cookie.
+* Provide a visible **Log Out** button.
+* Logging out must invalidate the server-side session immediately.
+* If the session expires, redirect the user back to `/admin` and require authentication again.
+* Never provide a "remember me" option unless it is explicitly enabled later.
+* Do not trust client-provided session expiration timestamps.
+
+### Login Attempt Protection
+
+Implement server-side brute-force protection.
+
+* Rate-limit login attempts **per IP address**.
+* Track attempts using a rolling **20-minute window**.
+* Add progressively stronger throttling after repeated failed attempts.
+* Do not allow unlimited password guesses from a single IP.
+* Also consider rate limiting by account/email identifier to prevent attackers from bypassing IP limits through distributed requests.
+* Return the same generic authentication response regardless of whether the email exists.
+* Do not reveal the exact number of remaining attempts.
+* Do not expose internal rate-limit information to the browser.
+* Store rate-limit state in a shared server-side store such as Redis or the platform's equivalent rather than relying on in-memory state when the application can run across multiple instances.
+
+### Database Security / Row Level Security
+
+Enable and correctly configure **Row Level Security (RLS)** on every database table containing admin, customer, order, inventory, payment, or other sensitive information.
+
+* Default to denying access.
+* Create explicit policies granting only the minimum permissions required.
+* Never rely on RLS alone for authentication.
+* Never expose a database service-role/admin key to the browser.
+* Database credentials and service-role credentials must exist only in secure server-side environment variables/secrets.
+* Admin database operations must be performed through authenticated server-side code.
+* Verify the authenticated user's role/permissions server-side before every privileged operation.
+* Use least-privilege permissions throughout the application.
+
+### Encryption / Data Protection
+
+* Encrypt all traffic using HTTPS/TLS.
+* Encrypt sensitive data at rest using the database/platform's supported encryption mechanisms.
+* Encrypt sensitive secrets using the hosting platform's secret/environment-variable system.
+* Never put Stripe secret keys, database service keys, password hashes, session secrets, or other private credentials into frontend code.
+* Never send sensitive database fields to the client unless they are genuinely required.
+* Minimize stored personal information.
+* Do not store raw Stripe payment-card information. Use Stripe's hosted/tokenized payment infrastructure.
+
+### Admin Authorization
+
+Authentication and authorization must be separate concepts.
+
+After login:
+
+1. Verify that the account is authenticated.
+2. Verify that the authenticated account has an authorized admin role.
+3. Only then allow access to `/admin` and admin API/server actions.
+
+A normal customer account must never be able to access admin functionality by changing a frontend value, URL, cookie, request body, or role field.
+
+Every privileged backend endpoint must independently verify authorization.
+
+### CSRF / Request Security
+
+Protect state-changing authenticated requests against CSRF where applicable.
+
+* Use appropriate CSRF protections for cookie-based authentication.
+* Validate request origins where appropriate.
+* Validate all server-side input.
+* Never trust hidden form fields for authorization.
+* Never trust client-side role or permission values.
+* Use secure security headers where supported, including an appropriate Content Security Policy.
+
+### Admin UI
+
+Create a clean, professional admin interface for the band's store.
+
+The `/admin` login page should contain:
+
+* Band/store branding.
+* Email input.
+* Password input with show/hide functionality.
+* Login button.
+* Loading state while authentication is processing.
+* Generic error message for failed authentication.
+* Accessible labels and keyboard navigation.
+* Mobile-responsive design.
+
+After authentication, show an admin dashboard where authorized admins can eventually manage:
+
+* Products
+* Inventory
+* Orders
+* Store settings
+* Customers/order information where legitimately necessary
+* Stripe-related store information that does not expose secret credentials
+
+Do not expose Stripe secret keys or sensitive payment information in the dashboard.
+
+### Security Logging
+
+Create security/audit logging for important administrative events, including:
+
+* Successful login
+* Failed login
+* Logout
+* Session expiration
+* Authorization failures
+* Important admin actions such as changing products, prices, inventory, or orders
+
+Never put passwords, session tokens, Stripe secret keys, or other sensitive credentials into logs.
+
+Where possible, record useful metadata such as timestamp, event type, and source IP while following applicable privacy requirements.
+
+### Important Implementation Rule
+
+Security controls must be enforced **server-side**.
+
+Do not consider the application secure merely because:
+
+* the `/admin` page is hidden,
+* frontend JavaScript checks whether someone is an admin,
+* a user is redirected away from `/admin`,
+* a cookie contains an `isAdmin` value,
+* or an API endpoint is not linked from the UI.
+
+Assume an attacker can directly call every API endpoint and manipulate every client-side value.
+
+Before considering the `/admin` system complete, verify that:
+
+* Unauthorized users cannot access admin pages or APIs.
+* Customer accounts cannot elevate themselves to admin.
+* Passwords are never stored or transmitted insecurely.
+* No credentials or secrets are present in client-side bundles.
+* Login brute-force attempts are rate-limited.
+* Sessions expire after 15 minutes of inactivity.
+* Sessions are not persistent after the browser is closed.
+* Logout invalidates the session server-side.
+* RLS policies prevent unauthorized database access.
+* Stripe secret credentials remain server-side.
+* All privileged operations perform server-side authentication and authorization.
+* Production error messages do not expose stack traces, database details, secrets, or authentication information.
+
+Use established security libraries/services provided by the application's framework and hosting/database provider wherever possible instead of implementing cryptography or authentication primitives from scratch.
