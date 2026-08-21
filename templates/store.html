@@ -2,7 +2,36 @@
 {% block title %}Store — Frog in Space{% endblock %}
 {% block content %}
 <section class="page-section">
+  <p class="eyebrow">FROG IN SPACE MERCH</p>
   <h1 class="page-title">Store</h1>
-  <p style="text-align:center;">Merch coming soon!</p>
+  <p class="store-intro">Wear the sound. More merch is on the way.</p>
+  {% if data.products %}
+  <div class="store-grid">
+    {% for product in data.products %}
+      {% set variants = product.variants or [] %}
+      {% set images = (variants[0].images if variants else []) %}
+      <div class="product-card" data-card-product='{{ product|tojson }}'>
+        <div class="product-image-wrap">
+          {% if images %}
+            <img class="product-image" data-card-image src="{{ asset_url(images[0]) }}" alt="{{ product.name }}{% if variants[0].color %} — {{ variants[0].color }}{% endif %}" />
+          {% else %}
+            <div class="product-placeholder">FIS</div>
+          {% endif %}
+          {% if images|length > 1 or variants|length > 1 %}
+            <button type="button" class="product-arrow" data-card-prev aria-label="Previous image">‹</button>
+            <button type="button" class="product-arrow product-arrow-right" data-card-next aria-label="Next image">›</button>
+          {% endif %}
+        </div>
+        <a class="product-meta" href="{{ url_for('store_item', item_index=loop.index0) }}">
+          <h2>{{ product.name|upper }}</h2>
+          <span class="product-price">{{ product.price }}</span>
+          <span class="product-color" data-card-color>{% if variants and variants[0].color %}{{ variants[0].color }}{% endif %}</span>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <div class="store-empty"><p>Merch coming soon.</p><span>Check back soon for Frog in Space favorites.</span></div>
+  {% endif %}
 </section>
 {% endblock %}

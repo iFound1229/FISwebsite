@@ -26,7 +26,7 @@ MEMBER_SLOT_COUNT = 8
 NEW_MEMBER_NAME = "New Member"
 ADMIN_PANEL_PATH = "/lilyrose"
 ADMIN_INACTIVITY_SECONDS = 15 * 60
-ADMIN_MAX_LIFETIME_SECONDS = 8 * 60 * 60
+ADMIN_MAX_LIFETIME_SECONDS = 15 * 60
 LOGIN_WINDOW = timedelta(minutes=20)
 LOGIN_MAX_FAILURES = 5
 ALLOWED_EXT = {"png", "jpg", "jpeg", "gif", "webp"}
@@ -138,6 +138,7 @@ def default_data():
         "events": [],
         "past_events": [],
         "songs": [],
+        "products": [],
         "gallery": [],
         "members": members,
     }
@@ -481,6 +482,20 @@ def store():
     return render_template("store.html", data=load_data(), active="store")
 
 
+@app.route("/store/item/<int:item_index>")
+def store_item(item_index):
+    products = load_data().get("products") or []
+    if item_index < 0 or item_index >= len(products):
+        abort(404)
+    return render_template(
+        "store_item.html",
+        data=load_data(),
+        product=products[item_index],
+        item_index=item_index,
+        active="store",
+    )
+
+
 @app.route("/songlist")
 def songlist():
     return render_template("songlist.html", data=load_data(), active="songlist")
@@ -680,6 +695,36 @@ def admin_save():
         if t.strip() or a.strip():
             songs.append({"title": t.strip(), "artist": a.strip()})
     data["songs"] = songs
+
+    products = []
+    product_names = request.form.getlist("product_name")
+    product_prices = request.form.getlist("product_price")
+    product_variants = request.form.getlist("product_variants")
+    for i, (name, price, variants_text) in enumerate(zip(product_names, product_prices, product_variants)):
+        name = name.strip()
+        price = price.strip()
+        if not (name or price or variants_text.strip()):
+            continue
+        try:
+            variants = json.loads(variants_text or "[]")
+        except json.JSONDecodeError:
+            variants = []
+        if not isinstance(variants, list):
+            variants = []
+        clean_variants = []
+        for variant_index, variant in enumerate(variants):
+            if not isinstance(variant, dict):
+                continue
+            color = str(variant.get("color", "")).strip()
+            images = [str(image).strip() for image in (variant.get("images") or []) if str(image).strip()]
+            for uploaded in request.files.getlist(f"product_{i}_variant_{variant_index}_images"):
+                saved = save_upload(uploaded)
+                if saved:
+                    images.append(saved)
+            if color or images:
+                clean_variants.append({"color": color, "images": images})
+        products.append({"name": name, "price": price, "variants": clean_variants})
+    data["products"] = products
 
     keep = request.form.getlist("gallery_keep")
     data["gallery"] = [g for g in data["gallery"] if g in keep]

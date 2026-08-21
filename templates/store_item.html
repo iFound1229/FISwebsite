@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name|upper }} — Frog in Space{% endblock %}
+{% block content %}
+<section class="page-section product-detail" data-product-detail>
+  <a class="back-link" href="{{ url_for('store') }}">← Back to store</a>
+  <div class="detail-layout">
+    <div class="detail-gallery">
+      <div class="detail-main-image">
+        <div class="product-placeholder" data-detail-placeholder>FIS</div>
+        <img data-detail-image alt="{{ product.name }}" />
+        <button type="button" class="detail-arrow detail-prev" aria-label="Previous image">‹</button>
+        <button type="button" class="detail-arrow detail-next" aria-label="Next image">›</button>
+      </div>
+      <div class="detail-thumbs" data-detail-thumbs></div>
+    </div>
+    <div class="detail-info">
+      <p class="eyebrow">FROG IN SPACE MERCH</p>
+      <h1>{{ product.name|upper }}</h1>
+      <p class="detail-price">{{ product.price }}</p>
+      <div class="color-picker" data-color-picker></div>
+      <p class="detail-selection" data-detail-selection></p>
+      <button type="button" class="contact-btn add-cart-btn" data-add-cart>Add to cart</button>
+      <p class="cart-note" data-cart-note>No payment yet — this just saves your selection.</p>
+    </div>
+  </div>
+</section>
+<script>
+  window.storeProduct = {{ product|tojson }};
+</script>
+{% endblock %}
