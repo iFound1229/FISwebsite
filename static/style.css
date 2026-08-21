@@ -5,7 +5,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: Inter, "Avenir Next", "Segoe UI", sans-serif;
   background: linear-gradient(145deg, rgba(158, 221, 255, 1), rgba(181, 232, 247, 1) 42%, rgba(211, 240, 215, 1));
   color: #1a3a5c;
   min-height: 100vh;
@@ -27,6 +27,7 @@ body::before {
 
 .tabs {
   position: relative;
+  padding-left: 132px;
   display: flex;
   justify-content: center;
   gap: 8px;
@@ -34,6 +35,18 @@ body::before {
   flex-wrap: wrap;
   background: linear-gradient(90deg, rgba(158, 221, 255, 0.96), rgba(174, 226, 211, 0.92));
 }
+
+.nav-brand {
+  position: absolute;
+  left: 22px;
+  top: 10px;
+  width: 88px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.nav-brand img { max-width: 88px; max-height: 46px; object-fit: contain; }
 
 .tab {
   padding: 10px 20px;
@@ -57,7 +70,9 @@ body::before {
   color: #1a3a5c;
   text-decoration: none;
   font-size: 22px;
+  line-height: 1;
 }
+.cart-nav svg { width: 24px; height: 24px; display: block; }
 .cart-count {
   position: absolute;
   top: -5px;
@@ -425,9 +440,9 @@ section h2 {
 .detail-prev { left: 12px; }
 .detail-next { right: 12px; }
 .detail-thumbs { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-.detail-thumbs button { width: 68px; height: 68px; border: 2px solid transparent; border-radius: 8px; padding: 0; overflow: hidden; cursor: pointer; background: #e8f4ff; }
+.detail-thumbs button { width: 78px; height: 88px; border: 2px solid transparent; border-radius: 8px; padding: 0 0 4px; overflow: hidden; cursor: pointer; background: #e8f4ff; color: #245848; font: inherit; font-size: 10px; font-weight: 700; }
 .detail-thumbs button.active { border-color: #2f8666; }
-.detail-thumbs img { width: 100%; height: 100%; object-fit: cover; }
+.detail-thumbs img { width: 100%; height: 66px; object-fit: cover; display: block; }
 .detail-description { color: #245848; line-height: 1.6; font-weight: 600; margin-bottom: 20px; }
 .cart-link-btn { display: inline-block; margin: 14px 0 0 8px; padding: 13px 22px; border-radius: 8px; background: #d1f0d8; color: #123f35; font-weight: 800; text-decoration: none; }
 .cart-link-btn:hover { background: #b8e5c4; }
@@ -459,6 +474,9 @@ section h2 {
 @media (max-width: 420px) {
   .store-grid { grid-template-columns: 1fr; }
   .cart-nav { right: 10px; }
+  .tabs { padding-left: 92px; padding-right: 42px; }
+  .nav-brand { left: 10px; width: 70px; }
+  .nav-brand img { max-width: 70px; }
   .cart-item { grid-template-columns: 56px 1fr auto; gap: 10px; }
   .cart-item img, .cart-item-placeholder { width: 56px; height: 56px; }
   .cart-item button { grid-column: 2 / -1; text-align: left; }

@@ -502,7 +502,7 @@ def store_item(item_index):
 
 @app.route("/store/cart")
 def store_cart():
-    return render_template("store_cart.html", active="store")
+    return render_template("store_cart.html", data=load_data(), active="store")
 
 
 @app.route("/store/cart/add", methods=["POST"])

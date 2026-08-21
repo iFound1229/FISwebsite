@@ -7,7 +7,8 @@
     <div class="detail-gallery">
       <div class="detail-main-image">
         <div class="product-placeholder" data-detail-placeholder>FIS</div>
-        <img data-detail-image alt="{{ product.name }}" />
+        {% set initial_image = ((product.variants or [])[0].images or [])[0] if (product.variants or []) else '' %}
+        <img data-detail-image {% if initial_image %}src="{{ asset_url(initial_image) }}"{% else %}hidden{% endif %} alt="{{ product.name }}" />
       </div>
       <div class="detail-thumbs" data-detail-thumbs></div>
     </div>
