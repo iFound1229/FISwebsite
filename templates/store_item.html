@@ -17,6 +17,7 @@
       <p class="eyebrow">FROG IN SPACE MERCH</p>
       <h1>{{ product.name|upper }}</h1>
       <p class="detail-price">{{ product.price }}</p>
+      {% if product.description %}<p class="detail-description">{{ product.description }}</p>{% endif %}
       <div class="color-picker" data-color-picker></div>
       <p class="detail-selection" data-detail-selection></p>
       <button type="button" class="contact-btn add-cart-btn" data-add-cart>Add to cart</button>

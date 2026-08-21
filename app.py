@@ -699,31 +699,31 @@ def admin_save():
     products = []
     product_names = request.form.getlist("product_name")
     product_prices = request.form.getlist("product_price")
-    product_variants = request.form.getlist("product_variants")
-    for i, (name, price, variants_text) in enumerate(zip(product_names, product_prices, product_variants)):
+    product_descriptions = request.form.getlist("product_description")
+    product_keys = request.form.getlist("product_key")
+    for i, (name, price) in enumerate(zip(product_names, product_prices)):
         name = name.strip()
         price = price.strip()
-        if not (name or price or variants_text.strip()):
+        description = product_descriptions[i].strip() if i < len(product_descriptions) else ""
+        key = product_keys[i] if i < len(product_keys) else str(i)
+        if not (name or price or description):
             continue
-        try:
-            variants = json.loads(variants_text or "[]")
-        except json.JSONDecodeError:
-            variants = []
-        if not isinstance(variants, list):
-            variants = []
+        colors = request.form.getlist(f"product_{key}_color")
+        existing_images = request.form.getlist(f"product_{key}_existing")
+        uploaded_images = request.files.getlist(f"product_{key}_image")
         clean_variants = []
-        for variant_index, variant in enumerate(variants):
-            if not isinstance(variant, dict):
-                continue
-            color = str(variant.get("color", "")).strip()
-            images = [str(image).strip() for image in (variant.get("images") or []) if str(image).strip()]
-            for uploaded in request.files.getlist(f"product_{i}_variant_{variant_index}_images"):
-                saved = save_upload(uploaded)
+        for variant_index, color_value in enumerate(colors):
+            color = color_value.strip()
+            images = []
+            if variant_index < len(existing_images) and existing_images[variant_index].strip():
+                images.append(existing_images[variant_index].strip())
+            if variant_index < len(uploaded_images):
+                saved = save_upload(uploaded_images[variant_index])
                 if saved:
                     images.append(saved)
             if color or images:
                 clean_variants.append({"color": color, "images": images})
-        products.append({"name": name, "price": price, "variants": clean_variants})
+        products.append({"name": name, "description": description, "price": price, "variants": clean_variants})
     data["products"] = products
 
     keep = request.form.getlist("gallery_keep")

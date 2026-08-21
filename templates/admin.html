@@ -8,6 +8,7 @@
   <style>
     body { background: #f4f7fb; color: #1a3a5c; }
     .admin-wrap { max-width: 900px; margin: 0 auto; padding: 30px 20px 80px; }
+    .admin-wrap > form { display: flex; flex-direction: column; }
     .admin-heading { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:8px; }
     .admin-heading h1 { margin:0; }
     .logout-btn { background:#e2e8f0; color:#1a3a5c; border:0; border-radius:6px; padding:9px 13px; font-weight:700; cursor:pointer; }
@@ -37,8 +38,11 @@
     .member-admin-photo { display: flex; flex-direction: column; gap: 6px; }
     .member-admin-fields { display: flex; flex-direction: column; }
     .product-admin-row { border:1px solid #dbe7ef; border-radius:10px; padding:16px; margin-bottom:16px; }
-    .product-admin-grid { display:grid; grid-template-columns: 2fr 1fr auto; gap:10px; align-items:end; }
-    .product-admin-row textarea { width:100%; min-height:90px; font-family:monospace; padding:10px; border:1px solid #cbd5e1; border-radius:6px; }
+    .store-products { order: -10; }
+    .product-admin-grid { display:grid; grid-template-columns: 2fr 2fr 1fr auto; gap:10px; align-items:end; }
+    .product-admin-row textarea { width:100%; min-height:72px; padding:10px; border:1px solid #cbd5e1; border-radius:6px; font-family:inherit; }
+    .product-image-row { display:grid; grid-template-columns: 1fr 1fr auto; gap:10px; align-items:end; margin-top:10px; }
+    .product-image-row .thumb { width:60px; height:60px; object-fit:cover; display:block; margin-bottom:5px; }
     .hint { color:#64748b; font-size:13px; margin-top:6px; }
     @media (max-width: 520px) { .member-admin-body { grid-template-columns: 1fr; } }
     @media (max-width: 640px) { .product-admin-grid { grid-template-columns:1fr; } }
@@ -148,6 +152,38 @@
       <button type="button" class="add-btn" onclick="addEvent('past-events-container','past_event')">+ Add Past Event</button>
     </div>
 
+    <div class="card store-products">
+      <h2>Store Products</h2>
+      <p class="hint">Add a name, description, price, and as many images as you need. Type the color beside each image. Use the same color on multiple images for different views of one color.</p>
+      <div id="products-container">
+        {% for product in data.products or [] %}
+        {% set product_index = loop.index0 %}
+        <div class="product-admin-row" data-product-key="{{ product_index }}">
+          <input type="hidden" name="product_key" value="{{ product_index }}" />
+          <div class="product-admin-grid">
+            <div><label>Item name</label><input type="text" name="product_name" value="{{ product.name }}" placeholder="FIS T-Shirt" /></div>
+            <div><label>Description</label><textarea name="product_description" placeholder="Soft cotton band tee">{{ product.description or '' }}</textarea></div>
+            <div><label>Price</label><input type="text" name="product_price" value="{{ product.price }}" placeholder="12.99" /></div>
+            <button type="button" class="remove" onclick="this.closest('.product-admin-row').remove()">Remove</button>
+          </div>
+          <div class="product-images" data-images>
+          {% for variant in product.variants or [] %}
+            {% for image in variant.images or [] %}
+            <div class="product-image-row">
+              <div><label>Image</label><img class="thumb" src="{{ asset_url(image) }}" /><input type="hidden" name="product_{{ product_index }}_existing" value="{{ image }}" /><input type="file" name="product_{{ product_index }}_image" accept="image/*" /></div>
+              <div><label>Color</label><input type="text" name="product_{{ product_index }}_color" value="{{ variant.color }}" placeholder="Black" /></div>
+              <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>
+            </div>
+            {% endfor %}
+          {% endfor %}
+          </div>
+          <button type="button" class="add-btn" onclick="addProductImage(this)">+ Add Image</button>
+        </div>
+        {% endfor %}
+      </div>
+      <button type="button" class="add-btn" onclick="addProduct()">+ Add Product</button>
+    </div>
+
     <div class="card">
       <h2>Song List</h2>
       <div id="songs-container">
@@ -160,31 +196,6 @@
         {% endfor %}
       </div>
       <button type="button" class="add-btn" onclick="addSong()">+ Add Song</button>
-    </div>
-
-    <div class="card">
-      <h2>Store Products</h2>
-      <p class="hint">Add products as JSON variants. Each variant can have a color and image paths. Uploads are added to that variant; existing media paths stay when you save.</p>
-      <div id="products-container">
-        {% for product in data.products or [] %}
-        {% set product_index = loop.index0 %}
-        <div class="product-admin-row">
-          <div class="product-admin-grid">
-            <div><label>Item name</label><input type="text" name="product_name" value="{{ product.name }}" placeholder="FIS T-Shirt" /></div>
-            <div><label>Price</label><input type="text" name="product_price" value="{{ product.price }}" placeholder="12.99" /></div>
-            <button type="button" class="remove" onclick="this.closest('.product-admin-row').remove()">Remove</button>
-          </div>
-          <label>Variants JSON</label>
-          <textarea name="product_variants">{{ product.variants|tojson }}</textarea>
-          <p class="hint">Example: [{"color":"Black","images":["media/id.png"]},{"color":"Blue","images":[]}].</p>
-          {% for variant in product.variants or [] %}
-            <label>{{ variant.color or 'Variant ' ~ loop.index }} — add images</label>
-            <input type="file" name="product_{{ product_index }}_variant_{{ loop.index0 }}_images" accept="image/*" multiple />
-          {% endfor %}
-        </div>
-        {% endfor %}
-      </div>
-      <button type="button" class="add-btn" onclick="addProduct()">+ Add Product</button>
     </div>
 
     <div class="card">
@@ -273,17 +284,31 @@ function addSong() {
  function addProduct() {
    const c = document.getElementById('products-container');
    const div = document.createElement('div');
+   const key = `new-${Date.now()}-${c.children.length}`;
    div.className = 'product-admin-row';
+   div.dataset.productKey = key;
    div.innerHTML = `
+     <input type="hidden" name="product_key" value="${key}" />
      <div class="product-admin-grid">
        <div><label>Item name</label><input type="text" name="product_name" placeholder="FIS T-Shirt" /></div>
+       <div><label>Description</label><textarea name="product_description" placeholder="Soft cotton band tee"></textarea></div>
        <div><label>Price</label><input type="text" name="product_price" placeholder="12.99" /></div>
        <button type="button" class="remove" onclick="this.closest('.product-admin-row').remove()">Remove</button>
      </div>
-     <label>Variants JSON</label>
-     <textarea name="product_variants">[{"color":"","images":[]}]</textarea>
-     <p class="hint">After saving once, image upload fields appear for each variant.</p>`;
+     <div class="product-images" data-images></div>
+     <button type="button" class="add-btn" onclick="addProductImage(this)">+ Add Image</button>`;
    c.appendChild(div);
+ }
+ function addProductImage(button) {
+   const product = button.closest('.product-admin-row');
+   const key = product.dataset.productKey;
+   const row = document.createElement('div');
+   row.className = 'product-image-row';
+   row.innerHTML = `
+     <div><label>Image</label><input type="file" name="product_${key}_image" accept="image/*" /></div>
+     <div><label>Color</label><input type="text" name="product_${key}_color" placeholder="Black" /></div>
+     <button type="button" class="remove" onclick="this.parentElement.remove()">Remove</button>`;
+   product.querySelector('[data-images]').appendChild(row);
  }
 </script>
 <script>
