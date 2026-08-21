@@ -2,3 +2,6 @@ Flask>=3.0
 psycopg2-binary>=2.9
 gunicorn>=21.2
 argon2-cffi
+argon2
+argon2-cffi
+werkzeug
