@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Members — Frog in Space{% endblock %}
 {% block content %}
-<section class="page-section members-section">
+<section class="page-section members-section about-page">
   <h1 class="page-title">Members</h1>
 
   {% set has_any = data.members | selectattr('name') | list | length > 0 %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Bio — Frog in Space{% endblock %}
 {% block content %}
-<section class="page-section">
+<section class="page-section about-page">
   <h1 class="page-title">Bio</h1>
   <div class="bio-content">
     {% for para in data.bio.split('\n\n') %}
@@ -18,10 +18,6 @@
         {% endif %}
       {% endif %}
     {% endfor %}
-  </div>
-  <div class="social-links" style="margin-top:30px;">
-    {% if data.instagram %}<a href="{{ data.instagram }}" target="_blank" rel="noopener" class="social-link"><span class="social-icon">📷</span><span>Instagram</span></a>{% endif %}
-    {% if data.youtube %}<a href="{{ data.youtube }}" target="_blank" rel="noopener" class="social-link"><span class="social-icon">▶️</span><span>YouTube</span></a>{% endif %}
   </div>
 </section>
 {% endblock %}

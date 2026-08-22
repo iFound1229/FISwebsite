@@ -474,12 +474,15 @@ def home():
 
 @app.route("/bio")
 def bio():
-    return render_template("bio.html", data=load_data(), active="bio")
+    return render_template("bio.html", data=load_data(), active="about")
 
 
 @app.route("/shows")
 def shows():
-    return render_template("shows.html", data=load_data(), active="shows")
+    show_view = request.args.get("view", "upcoming")
+    if show_view not in {"upcoming", "past"}:
+        show_view = "upcoming"
+    return render_template("shows.html", data=load_data(), active="events", show_view=show_view)
 
 
 @app.route("/store")
@@ -525,7 +528,12 @@ def add_to_cart():
 
 @app.route("/songlist")
 def songlist():
-    return render_template("songlist.html", data=load_data(), active="songlist")
+    return render_template("songlist.html", data=load_data(), active="events")
+
+
+@app.route("/events")
+def events():
+    return render_template("events.html", data=load_data(), active="events")
 
 
 @app.route("/contact")
@@ -540,7 +548,7 @@ def members():
     return render_template(
         "members.html",
         data=load_data(),
-        active="members",
+        active="about",
         unlock_nonce=unlock_nonce,
     )
 

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Events — Frog in Space{% endblock %}
+{% block content %}
+<section class="page-section events-page">
+  <h1 class="page-title">Events</h1>
+  <a href="{{ url_for('contact') }}" class="contact-btn">Contact Us</a>
+  <p class="events-contact-copy">Want to book us, ask a question, or say hi?</p>
+  <nav class="section-subnav events-subnav" aria-label="Events sections">
+    <a class="toggle-btn" href="{{ url_for('shows') }}">Shows</a>
+    <a class="toggle-btn" href="{{ url_for('songlist') }}">Song List</a>
+  </nav>
+</section>
+{% endblock %}

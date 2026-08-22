@@ -13,16 +13,39 @@
       <img src="{{ asset_url(data.nav_logo) if data.nav_logo else url_for('static', filename='uploads/frog-space-icon.png') }}" alt="Frog in Space" />
     </a>
     <a href="{{ url_for('home') }}" class="tab {% if active=='home' %}active{% endif %}">Home</a>
-    <a href="{{ url_for('bio') }}" class="tab {% if active=='bio' %}active{% endif %}">Bio</a>
-    <a href="{{ url_for('shows') }}" class="tab {% if active=='shows' %}active{% endif %}">Shows</a>
     <a href="{{ url_for('store') }}" class="tab {% if active=='store' %}active{% endif %}">Store</a>
-    <a href="{{ url_for('songlist') }}" class="tab {% if active=='songlist' %}active{% endif %}">Song List</a>
-    <a href="{{ url_for('contact') }}" class="tab {% if active=='contact' %}active{% endif %}">Contact</a>
-    <a href="{{ url_for('members') }}" class="tab {% if active=='members' %}active{% endif %}">Members</a>
-    <a href="{{ url_for('store_cart') }}" class="cart-nav" aria-label="Go to cart" title="Go to cart">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H6M10 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm8 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span class="cart-count" data-cart-count>0</span>
-    </a>
+    <details class="nav-dropdown {% if active=='events' %}active{% endif %}">
+      <summary class="tab">Events</summary>
+      <div class="dropdown-menu">
+        <a href="{{ url_for('events') }}">Events Home</a>
+        <a href="{{ url_for('shows') }}">Shows</a>
+        <a href="{{ url_for('songlist') }}">Song List</a>
+      </div>
+    </details>
+    <details class="nav-dropdown {% if active=='about' %}active{% endif %}">
+      <summary class="tab">About Us</summary>
+      <div class="dropdown-menu">
+        <a href="{{ url_for('bio') }}">Bio</a>
+        <a href="{{ url_for('members') }}">Members</a>
+      </div>
+    </details>
+    <a href="{{ url_for('contact') }}" class="tab {% if active=='contact' %}active{% endif %}">Contact Us</a>
+    <div class="nav-actions">
+      {% if data.instagram %}
+      <a href="{{ data.instagram }}" target="_blank" rel="noopener" class="social-nav" aria-label="Instagram" title="Instagram">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.5" cy="6.7" r="1" fill="currentColor"/></svg>
+      </a>
+      {% endif %}
+      {% if data.youtube %}
+      <a href="{{ data.youtube }}" target="_blank" rel="noopener" class="social-nav" aria-label="YouTube" title="YouTube">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m10 9 5 3-5 3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      </a>
+      {% endif %}
+      <a href="{{ url_for('store_cart') }}" class="cart-nav" aria-label="Go to cart" title="Go to cart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 1.9-1.4L20.5 8H6M10 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm8 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span class="cart-count" data-cart-count>0</span>
+      </a>
+    </div>
   </nav>
 
   {% block content %}{% endblock %}
