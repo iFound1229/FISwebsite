@@ -133,6 +133,7 @@ def default_data():
     members[-1]["name"] = NEW_MEMBER_NAME
     return {
         "logo": None,
+        "nav_logo": None,
         "feature": None,
         "login_image": None,
         "instagram": "https://www.instagram.com/froginspaceband/",
@@ -681,6 +682,9 @@ def admin_save():
     logo = save_upload(request.files.get("logo"))
     if logo:
         data["logo"] = logo
+    nav_logo = save_upload(request.files.get("nav_logo"))
+    if nav_logo:
+        data["nav_logo"] = nav_logo
     feature = save_upload(request.files.get("feature"))
     if feature:
         data["feature"] = feature

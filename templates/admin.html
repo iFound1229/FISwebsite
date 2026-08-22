@@ -76,6 +76,18 @@
     </div>
 
     <div class="card">
+      <h2>Top-left Header Image</h2>
+      <p style="color:#555; margin-bottom:12px; font-size:14px;">This image appears in the top-left corner of every page and links back to Home.</p>
+      {% if data.nav_logo %}
+        <img class="preview-img" src="{{ asset_url(data.nav_logo) }}" alt="Current header image" />
+      {% else %}
+        <img class="preview-img" src="{{ url_for('static', filename='uploads/frog-space-icon.png') }}" alt="Current default header image" />
+      {% endif %}
+      <label>Choose header image (PNG/JPG)</label>
+      <input type="file" name="nav_logo" accept="image/*" />
+    </div>
+
+    <div class="card">
       <h2>Feature Picture</h2>
       {% if data.feature %}<img class="preview-img" src="{{ asset_url(data.feature) }}" />{% endif %}
       <label>Replace feature picture</label>
