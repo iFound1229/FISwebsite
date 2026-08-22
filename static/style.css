@@ -10,7 +10,9 @@
 
 body {
   font-family: Inter, "Avenir Next", "Segoe UI", sans-serif;
-  background: linear-gradient(125deg, rgba(91, 190, 255, 0.98) 0%, rgba(171, 226, 239, 0.98) 48%, rgba(181, 232, 215, 0.98) 100%);
+  background:
+    radial-gradient(circle at 16% 20%, rgba(255, 255, 255, 0.22), transparent 25%),
+    linear-gradient(124deg, rgba(91, 190, 255, 1) 0%, rgba(112, 199, 242, 1) 56%, rgba(117, 195, 133, 0.92) 100%);
   color: #1a3a5c;
   min-height: 100vh;
   position: relative;
@@ -29,28 +31,6 @@ body::before {
     radial-gradient(circle at 58% 5%, rgba(118, 201, 143, 0.13), transparent 24%);
 }
 
-body::after {
-  content: "";
-  position: fixed;
-  inset: -12%;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.3;
-  background-image:
-    radial-gradient(circle, rgba(255, 255, 255, 0.62) 0 1.4px, transparent 1.8px),
-    radial-gradient(circle, rgba(30, 112, 145, 0.22) 0 1px, transparent 1.5px),
-    radial-gradient(circle, rgba(255, 255, 255, 0.42) 0 1px, transparent 1.4px);
-  background-size: 175px 190px, 235px 220px, 125px 145px;
-  background-position: 10px 30px, 80px 100px, 30px 80px;
-  animation: drift-particles 32s linear infinite;
-}
-
-@keyframes drift-particles {
-  0% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(22px, -18px, 0); }
-  100% { transform: translate3d(0, 0, 0); }
-}
-
 .tabs {
   position: relative;
   display: flex;
@@ -58,7 +38,7 @@ body::after {
   gap: 8px;
   padding: 16px 150px 16px 132px;
   flex-wrap: wrap;
-  background: linear-gradient(90deg, rgba(158, 221, 255, 0.96), rgba(174, 226, 211, 0.92));
+  background: transparent;
 }
 
 .nav-brand {
@@ -870,9 +850,6 @@ section h2 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body::after {
-    animation: none;
-  }
   .reveal-on-scroll {
     opacity: 1;
     transform: none;
