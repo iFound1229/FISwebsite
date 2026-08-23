@@ -3,3 +3,9 @@ psycopg2-binary>=2.9
 gunicorn>=21.2
 argon2-cffi
 werkzeug
+argon2
+argon2-cffi
+Flask
+gunicorn
+psycopg2-binary
+werkzeug

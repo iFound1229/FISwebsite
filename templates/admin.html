@@ -81,7 +81,7 @@
       {% if data.nav_logo %}
         <img class="preview-img" src="{{ asset_url(data.nav_logo) }}" alt="Current header image" />
       {% else %}
-        <img class="preview-img" src="{{ url_for('static', filename='uploads/frog-space-icon.png') }}" alt="Current default header image" />
+        <img class="preview-img" src="{{ url_for('static', filename='uploads/logo.png') }}" alt="Current default header image" />
       {% endif %}
       <label>Choose header image (PNG/JPG)</label>
       <input type="file" name="nav_logo" accept="image/*" />

@@ -1,4 +1,17 @@
 (function () {
+  const mobileNavToggle = document.querySelector('.mobile-nav-toggle');
+  const navMenu = document.querySelector('.nav-menu');
+  if (mobileNavToggle && navMenu) {
+    mobileNavToggle.addEventListener('click', () => {
+      const isOpen = navMenu.classList.toggle('is-open');
+      mobileNavToggle.setAttribute('aria-expanded', String(isOpen));
+    });
+    navMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+      navMenu.classList.remove('is-open');
+      mobileNavToggle.setAttribute('aria-expanded', 'false');
+    }));
+  }
+
   const revealTargets = document.querySelectorAll(
     '.page-section > *, .landing-hero, .landing-page > section, ' +
     '.landing-page .social-link, .landing-page .feature-image, ' +
